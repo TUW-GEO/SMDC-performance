@@ -1,4 +1,4 @@
-# Copyright (c) 2014,Vienna University of Technology,
+# Copyright (c) 2013,Vienna University of Technology,
 # Department of Geodesy and Geoinformation
 # All rights reserved.
 
@@ -25,3 +25,29 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+'''
+Tests for the Visualization part of the test suite
+Created on Tue Nov 25 14:06:48 2014
+
+@author: Christoph.Paulik@geo.tuwien.ac.at
+'''
+
+import smdc_perftests.visual as vis
+import smdc_perftests.performance_tests.test_runner as test_runner
+import matplotlib.pyplot as plt
+
+
+def test_boxplots():
+
+    list1 = [5.8, 6.3, 6.2, 5.2, 4.3, 6.1, 4.2, 5.5]
+    list2 = [6.7, 8.3, 9.4, 7.3, 8.5]
+    list3 = [6.7, 8.3, 9.4, 7.3]
+
+    res1 = test_runner.TestResults(list1, 'list1')
+    res2 = test_runner.TestResults(list2, 'list2')
+    res3 = test_runner.TestResults(list3, 'list3')
+
+    fig, axes = vis.plot_boxplots(
+        res1, res2, res3, conf_level=50, figsize=(5, 3), dpi=150)
+    plt.show()

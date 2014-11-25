@@ -2,27 +2,22 @@
 SMDC_perftests
 ==============
 
-This is the documentation of **SMDC_perftests**.
+This is the documentation of **SMDC_perftests**, a small python module that provides
+a decorator for measuring the time a function needs to execute. It then stores the
+results in a :class:`SMDC_perftests.performance_tests.test_runner.TestResults` object.
+These objects can be compared to each other to quickly find out if the measured time
+was significantly different using a 95% confidence interval.
 
-.. note::
+The objects can also be stored to and restored from netCDF4 files on disk.
+There are also plotting functions for the TestResults object.
 
-    This is the main page of your project's `Sphinx <http://sphinx-doc.org/>`_
-    documentation. It is formatted in `reStructuredText
-    <http://sphinx-doc.org/rest.html>`__. Add additional pages by creating
-    rst-files in ``docs`` and adding them to the `toctree
-    <http://sphinx-doc.org/markup/toctree.html>`_ below. Use then
-    `references <http://sphinx-doc.org/markup/inline.html>`__ in order to link
-    them from this page. It is also possible to refer to the documentation of
-    other Python packages with the `Python domain syntax
-    <http://sphinx-doc.org/domains.html#the-python-domain>`__. By default you
-    can reference the documentation of `Sphinx <http://sphinx.pocoo.org>`__,
-    `Python <http://docs.python.org/>`__, `matplotlib
-    <http://matplotlib.sourceforge.net>`__, `NumPy
-    <http://docs.scipy.org/doc/numpy>`__, `Scikit-Learn
-    <http://scikit-learn.org/stable>`__, `Pandas
-    <http://pandas.pydata.org/pandas-docs/stable>`__, `SciPy
-    <http://docs.scipy.org/doc/scipy/reference/>`__. You can add more by
-    extending the ``intersphinx_mapping`` in your Sphinx's ``conf.py``.
+Requirements
+============
+
+This package was tested using python2.7 and requires the packages
+
+.. literalinclude:: ../requirements.txt
+
 
 Contents
 ========
@@ -30,6 +25,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   Examples <examples>
    License <license>
    Module Reference <_rst/modules>
 

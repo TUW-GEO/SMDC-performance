@@ -84,13 +84,16 @@ class TestResults(object):
         mean time per test run
     """
 
-    def __init__(self, init_obj,
+    def __init__(self, init_obj, name=None,
                  ddof=1):
 
         if type(init_obj) == str:
             self._from_nc(init_obj)
         elif type(init_obj) == list:
             self._measurements = init_obj
+            if name is None:
+                raise ValueError("Name must be given for new results.")
+            self.name = name
 
         self.ddof = ddof
         self._init_metrics()
@@ -105,6 +108,23 @@ class TestResults(object):
         self.stdev = np.sqrt(self.var)
         self.total = sum(self._measurements)
         self.mean = np.mean(self._measurements)
+
+    def __str__(self):
+        string = [""]
+        string.append("Results %s" % self.name)
+        string.append("%d runs" % self.n)
+        string.append("median %.4f mean %.4f stdev %.4f" %
+                      (self.median, self.mean, self.stdev))
+        string.append("sum %.4f" % self.total)
+        string.append(
+            "95%% confidence interval of the mean")
+        conf = self.confidence_int()
+        string.append("upper %.4f" % conf[2])
+        string.append("       |")
+        string.append("mean  %.4f" % conf[1])
+        string.append("       |")
+        string.append("lower %.4f" % conf[0])
+        return '\n'.join(string)
 
     def confidence_int(self, conf_level=95):
         """
@@ -154,12 +174,15 @@ class TestResults(object):
                 'measurements', 'f8', ('measurements',))
             msmts[:] = self._measurements
 
+            ncdata.setncatts({'dataset_name': self.name})
+
     def _from_nc(self, filename):
         """
         initializes object from netCDF4 file
         """
         with netCDF4.Dataset("test.nc") as ncdata:
             self._measurements = ncdata.variables['measurements'][:].tolist()
+            self.name = ncdata.dataset_name
 
     def __lt__(self, other):
         """
@@ -190,13 +213,15 @@ class TestResults(object):
             return False
 
 
-def measure(runs=5, ddof=1):
+def measure(exper_name, runs=5, ddof=1):
     """
     Decorator that measures the running time of a function
     and calculates statistics.
 
     Parameters
     ----------
+    exper_name: string
+        experiment name, used for plotting and saving
     runs: int
         number of test runs to perform
     ddof: int
@@ -213,7 +238,6 @@ def measure(runs=5, ddof=1):
     """
     def decorator(func):
         def inner(*args, **kwargs):
-            print "measuring time"
             measured_times = []
             for i in xrange(runs):
                 start = time.time()
@@ -221,9 +245,7 @@ def measure(runs=5, ddof=1):
                 end = time.time()
                 duration = end - start
                 measured_times.append(duration)
-                print duration
-            print "measured time now calculating results"
-            results = TestResults(measured_times, ddof=ddof)
+            results = TestResults(measured_times, exper_name, ddof=ddof)
             return results
 
         return inner
