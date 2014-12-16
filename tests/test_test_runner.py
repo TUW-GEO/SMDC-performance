@@ -51,9 +51,12 @@ class FakeDataset(object):
 
     def __init__(self):
         pass
+        self.ts_read = 0
+        self.img_read = 0
 
     def read_ts(self, gpi):
-        time.sleep(0.01)
+        time.sleep(0.0001)
+        self.ts_read += 1
         return None
 
     def read_img(self, date):
@@ -62,6 +65,7 @@ class FakeDataset(object):
         variable. This should not matter for these tests.
         """
         assert type(date) == dt.datetime
+        self.img_read += 1
         return None, None, None, None, None
 
 
@@ -98,6 +102,7 @@ def test_run_rand_by_gpi_list():
         test_runner.read_rand_ts_by_gpi_list(fd, gpi_list)
 
     results = test()
+    assert fd.ts_read == 10000 * 0.2 * 3
 
 
 def test_run_rand_by_date_list():
@@ -120,6 +125,7 @@ def test_run_rand_by_date_list():
         test_runner.read_rand_img_by_date_list(fd, date_list)
 
     results = test()
+    assert fd.img_read == 365 * 0.2 * 3
 
 
 def test_results_comparison():

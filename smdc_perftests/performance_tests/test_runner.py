@@ -268,7 +268,7 @@ def read_rand_ts_by_gpi_list(dataset, gpi_list, read_perc=20.0, **kwargs):
         percentage of points from gpi_list to read
 
     """
-    gpi_read = random.sample(gpi_list, int(len(gpi_list) / read_perc / 100.0))
+    gpi_read = random.sample(gpi_list, int(len(gpi_list) * read_perc / 100.0))
     for gpi in gpi_read:
         data = dataset.read_ts(gpi, **kwargs)
 
@@ -291,6 +291,6 @@ def read_rand_img_by_date_list(dataset, date_list, read_perc=20.0, **kwargs):
 
     """
     date_read = random.sample(
-        date_list, int(len(date_list) / read_perc / 100.0))
+        date_list, int(len(date_list) * read_perc / 100.0))
     for d in date_read:
         data = dataset.read_img(d, **kwargs)
