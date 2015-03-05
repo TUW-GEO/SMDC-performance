@@ -36,7 +36,7 @@ Created on Thu Nov 20 13:38:43 2014
 import smdc_perftests.performance_tests.test_runner as test_runner
 import datetime as dt
 import time
-import netCDF4
+import math
 import pytest
 from .fixtures import tempdir
 
@@ -53,19 +53,30 @@ class FakeDataset(object):
         pass
         self.ts_read = 0
         self.img_read = 0
+        self.cells_read = 0
 
-    def read_ts(self, gpi):
+    def get_timeseries(self, gpi, date_start=None, date_end=None):
         time.sleep(0.0001)
         self.ts_read += 1
         return None
 
-    def read_img(self, date):
+    def get_avg_image(self, date_start, date_end=None, cell_id=None):
         """
         Image readers generally return more than one
         variable. This should not matter for these tests.
         """
-        assert type(date) == dt.datetime
+        assert type(date_start) == dt.datetime
         self.img_read += 1
+        return None, None, None, None, None
+
+    def get_data(self, date_start, date_end, cell_id):
+        """
+        Image readers generally return more than one
+        variable. This should not matter for these tests.
+        """
+        assert type(date_start) == dt.datetime
+        assert type(date_end) == dt.datetime
+        self.cells_read += 1
         return None, None, None, None, None
 
 
@@ -102,7 +113,7 @@ def test_run_rand_by_gpi_list():
         test_runner.read_rand_ts_by_gpi_list(fd, gpi_list)
 
     results = test()
-    assert fd.ts_read == 10000 * 0.2 * 3
+    assert fd.ts_read == 10000 * 0.01 * 3
 
 
 def test_run_rand_by_date_list():
@@ -125,7 +136,26 @@ def test_run_rand_by_date_list():
         test_runner.read_rand_img_by_date_list(fd, date_list)
 
     results = test()
-    assert fd.img_read == 365 * 0.2 * 3
+    assert fd.img_read == math.ceil(365 * 0.01) * 3
+
+
+def test_run_rand_by_cell_list():
+    """
+    tests run by cell list
+
+    Does no assertions at the moment, but shows how to use
+    the class
+    """
+    fd = FakeDataset()
+    cell_list = range(500)
+
+    @test_runner.measure('test_rand_cells', runs=3)
+    def test():
+        test_runner.read_rand_cells_by_cell_list(fd,
+                                                 dt.datetime(2007, 1, 1), dt.datetime(2008, 1, 1), cell_list)
+
+    results = test()
+    assert fd.cells_read == 500 * 0.01 * 3
 
 
 def test_results_comparison():

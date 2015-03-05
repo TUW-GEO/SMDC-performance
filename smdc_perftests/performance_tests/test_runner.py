@@ -42,6 +42,7 @@ import time
 import random
 import numpy as np
 from scipy.stats import t
+import math
 
 import netCDF4
 
@@ -234,7 +235,7 @@ def measure(exper_name, runs=5, ddof=1):
     Returns
     =======
     results: dict
-        dictionary of the measurement results.
+        TestResults instance
     """
     def decorator(func):
         def inner(*args, **kwargs):
@@ -252,7 +253,7 @@ def measure(exper_name, runs=5, ddof=1):
     return decorator
 
 
-def read_rand_ts_by_gpi_list(dataset, gpi_list, read_perc=20.0, **kwargs):
+def read_rand_ts_by_gpi_list(dataset, gpi_list, read_perc=1.0, **kwargs):
     """
     reads time series data for random grid point indices in a list
     additional kwargs are given to read_ts method of dataset
@@ -266,14 +267,17 @@ def read_rand_ts_by_gpi_list(dataset, gpi_list, read_perc=20.0, **kwargs):
         list or numpy array of grid point indices
     read_perc: float
         percentage of points from gpi_list to read
-
+    **kwargs:
+        other keywords are passed to the get_timeseries method
+        dataset
     """
-    gpi_read = random.sample(gpi_list, int(len(gpi_list) * read_perc / 100.0))
+    gpi_read = random.sample(
+        gpi_list, int(math.ceil(len(gpi_list) * read_perc / 100.0)))
     for gpi in gpi_read:
-        data = dataset.read_ts(gpi, **kwargs)
+        data = dataset.get_timeseries(gpi, **kwargs)
 
 
-def read_rand_img_by_date_list(dataset, date_list, read_perc=20.0, **kwargs):
+def read_rand_img_by_date_list(dataset, date_list, read_perc=1.0, **kwargs):
     """
     reads image data for random dates on a list
     additional kwargs are given to read_img method
@@ -288,9 +292,43 @@ def read_rand_img_by_date_list(dataset, date_list, read_perc=20.0, **kwargs):
         list of datetime objects
     read_perc: float
         percentage of datetimes out of date_list to read
-
+    **kwargs:
+        other keywords are passed to the get_avg_image method
+        dataset
     """
     date_read = random.sample(
-        date_list, int(len(date_list) * read_perc / 100.0))
+        date_list, int(math.ceil(len(date_list) * read_perc / 100.0)))
     for d in date_read:
-        data = dataset.read_img(d, **kwargs)
+        data = dataset.get_avg_image(d, **kwargs)
+
+
+def read_rand_cells_by_cell_list(dataset, date_start, date_end, cell_id, read_perc=1.0):
+    """
+    reads data from the dataset using the get_data method.
+    In this method the start and end datetimes are fixed for all
+    cell ID's that are read.
+
+    Parameters
+    ----------
+    dataset: instance
+        instance of a class that implements a get_data(date_start, date_end, cell_id)
+        method
+    date_start: datetime
+        start dates which should be read.
+    date_end: datetime
+        end dates which should be read.
+    cell_id: int or iterable
+        cell ids which should be read. can also be a list of integers
+    read_perc : float
+        percentage of cell ids to read from the
+    """
+    # make sure cell_id is iterable
+    try:
+        iter(cell_id)
+    except TypeError:
+        cell_id = [cell_id]
+
+    cell_read = random.sample(
+        cell_id, int(math.ceil(len(cell_id) * read_perc / 100.0)))
+    for c in cell_read:
+        data = dataset.get_data(date_start, date_end, c)
