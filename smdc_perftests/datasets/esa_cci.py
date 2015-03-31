@@ -23,6 +23,7 @@ Created on Fri Mar 27 15:12:18 2015
 
 import netCDF4 as nc
 import numpy as np
+import os
 import pytesmo.grid.grids as grids
 
 
@@ -37,7 +38,7 @@ class ESACCI(object):
 
     """
 
-    def __init__(self, fname, variables=None, time_var='time'):
+    def __init__(self, fname, variables=None, time_var='time', lat_var='lat', lon_var='lon'):
         """
         Parameters
         ----------
@@ -49,6 +50,10 @@ class ESACCI(object):
             if given only these variables will be read
         time_var: string, optional
             name of the time variable in the netCDF file
+        lat_var: string, optional
+            name of the latitude variable in the netCDF file
+        lon_var: string, optional
+            name of the longitude variable in the netCDF file
         """
 
         self.fname = fname
@@ -58,17 +63,39 @@ class ESACCI(object):
         else:
             self.variables = variables
 
+        self.lat_var = lat_var
+        self.lon_var = lon_var
         self.time_var = time_var
-        self.init_grid()
+        # exclude time, lat and lon from variable list
+        self.variables.remove(self.time_var)
+        self.variables.remove(self.lat_var)
+        self.variables.remove(self.lon_var)
+        self._init_grid()
+        self._get_land_points()
 
-    def init_grid(self):
+    def _init_grid(self):
         """
         initialize the grid of the dataset
         """
-        latgrid, longrid = np.meshgrid(self.ds.variables['lon'][:],
+        longrid, latgrid = np.meshgrid(self.ds.variables['lon'][:],
                                        self.ds.variables['lat'][:])
         self.grid = grids.BasicGrid(longrid.flatten(), latgrid.flatten(),
-                                    shape=(720, 1440))
+                                    shape=(1440, 720))
+
+    def _get_land_points(self):
+        """
+        get the land points from the land mask file
+        """
+        lsmaskfile = os.path.join(os.path.dirname(__file__), "..", "..", "bin",
+                                  "esa-cci",
+                                  "ESACCI-SOILMOISTURE-LANDMASK_V0.4.nc")
+        with nc.Dataset(lsmaskfile) as ls:
+            # flip along the latitude axis to fit together with the images from the
+            # CCI data. This inconsitency was already reported to the CCI team.
+            land = ls.variables['land'][::-1, :].data == 1
+            all_ind = np.arange(land.size)
+            land_ind = all_ind[land.flat == True]
+            self.land_ind = land_ind
 
     def get_timeseries(self, locationid, date_start=None, date_end=None):
         """
@@ -116,14 +143,13 @@ class ESACCI(object):
             cell id to which the image should be limited, for ESA CCI this is
             not defined at the moment.
         """
-        start_index = nc.netcdftime.date2index(date_start,
-                                               self.ds.variables[self.time_var])
         if date_end is None:
             date_end = date_start
         img = self.get_data(date_start, date_end)
         # calculate average
         for v in img:
             img[v] = img[v].mean(axis=0)
+        return img
 
     def get_data(self, date_start, date_end, cellID=1):
         """
@@ -144,7 +170,7 @@ class ESACCI(object):
                                                self.ds.variables[self.time_var])
         end_index = nc.netcdftime.date2index(date_end,
                                              self.ds.variables[self.time_var])
-        date_slice = slice(start_index, end_index, None)
+        date_slice = slice(start_index, end_index + 1, None)
 
         img = {}
         for v in self.variables:
