@@ -27,13 +27,13 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
-Tests basic functionality of the test_runner module
+Tests basic functionality of the test_cases module
 Created on Thu Nov 20 13:38:43 2014
 
 @author: Christoph.Paulik@geo.tuwien.ac.at
 '''
 
-import smdc_perftests.performance_tests.test_runner as test_runner
+import smdc_perftests.performance_tests.test_cases as test_cases
 import datetime as dt
 import time
 import math
@@ -86,7 +86,7 @@ def test_measure_output_format():
     results in the expected format
     """
 
-    @test_runner.measure('test_output_format', runs=3)
+    @test_cases.measure('test_output_format', runs=3)
     def test():
         time.sleep(0.5)
 
@@ -108,9 +108,9 @@ def test_run_rand_by_gpi_list():
     # this test dataset has 10000 gpis of which 20 percent will be read
     gpi_list = range(10000)
 
-    @test_runner.measure('test_rand_gpi', runs=3)
+    @test_cases.measure('test_rand_gpi', runs=3)
     def test():
-        test_runner.read_rand_ts_by_gpi_list(fd, gpi_list)
+        test_cases.read_rand_ts_by_gpi_list(fd, gpi_list)
 
     results = test()
     assert fd.ts_read == 10000 * 0.01 * 3
@@ -131,9 +131,9 @@ def test_run_rand_by_date_list():
     for days in range(365):
         date_list.append(dt.datetime(2007, 1, 1) + dt.timedelta(days=days))
 
-    @test_runner.measure('test_rand_date', runs=3)
+    @test_cases.measure('test_rand_date', runs=3)
     def test():
-        test_runner.read_rand_img_by_date_list(fd, date_list)
+        test_cases.read_rand_img_by_date_list(fd, date_list)
 
     results = test()
     assert fd.img_read == math.ceil(365 * 0.01) * 3
@@ -149,10 +149,10 @@ def test_run_rand_by_cell_list():
     fd = FakeDataset()
     cell_list = range(500)
 
-    @test_runner.measure('test_rand_cells', runs=3)
+    @test_cases.measure('test_rand_cells', runs=3)
     def test():
-        test_runner.read_rand_cells_by_cell_list(fd,
-                                                 dt.datetime(2007, 1, 1), dt.datetime(2008, 1, 1), cell_list)
+        test_cases.read_rand_cells_by_cell_list(fd,
+                                                dt.datetime(2007, 1, 1), dt.datetime(2008, 1, 1), cell_list)
 
     results = test()
     assert fd.cells_read == 500 * 0.01 * 3
@@ -167,9 +167,9 @@ def test_results_comparison():
     list2 = [6.7, 8.3, 9.4, 7.3, 8.5]
     list3 = [6.7, 8.3, 9.4, 7.3]
 
-    res1 = test_runner.TestResults(list1, 'list1')
-    res2 = test_runner.TestResults(list2, 'list2')
-    res3 = test_runner.TestResults(list3, 'list3')
+    res1 = test_cases.TestResults(list1, 'list1')
+    res2 = test_cases.TestResults(list2, 'list2')
+    res3 = test_cases.TestResults(list3, 'list3')
 
     assert res1 < res2
     assert res2 > res1
@@ -184,7 +184,7 @@ def test_TestResults_init():
     wrongly
     """
     with pytest.raises(ValueError):
-        res1 = test_runner.TestResults([1])
+        res1 = test_cases.TestResults([1])
 
 
 def test_to_netcdf(tempdir):
@@ -194,9 +194,9 @@ def test_to_netcdf(tempdir):
 
     list1 = [5.8, 6.3, 6.2, 5.2, 4.3, 6.1, 4.2, 5.5]
 
-    res1 = test_runner.TestResults(list1, 'list1')
+    res1 = test_cases.TestResults(list1, 'list1')
     res1.to_nc("test.nc")
 
-    res2 = test_runner.TestResults("test.nc")
+    res2 = test_cases.TestResults("test.nc")
     assert res1._measurements == res2._measurements
     assert res1.name == res2.name

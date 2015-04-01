@@ -273,6 +273,8 @@ def read_rand_ts_by_gpi_list(dataset, gpi_list, read_perc=1.0, **kwargs):
     """
     gpi_read = random.sample(
         gpi_list, int(math.ceil(len(gpi_list) * read_perc / 100.0)))
+
+    print "reading {} out of {} time series".format(len(gpi_read), len(gpi_list))
     for gpi in gpi_read:
         data = dataset.get_timeseries(gpi, **kwargs)
 
@@ -298,8 +300,38 @@ def read_rand_img_by_date_list(dataset, date_list, read_perc=1.0, **kwargs):
     """
     date_read = random.sample(
         date_list, int(math.ceil(len(date_list) * read_perc / 100.0)))
+    print "reading {} out of {} dates".format(len(date_read), len(date_list))
     for d in date_read:
         data = dataset.get_avg_image(d, **kwargs)
+
+
+def read_rand_img_by_date_range(dataset, date_list, read_perc=1.0, **kwargs):
+    """
+    reads image data between random dates on a list
+    additional kwargs are given to read_img method
+    of dataset
+
+    Parameters
+    ----------
+    dataset: instance
+        instance of a class that implements a read_img(datetime)
+        method
+    date_list: iterable
+        list of datetime objects
+        The format is a list of lists e.g.
+        [[datetime(2007,1,1), datetime(2007,1,1)], #reads one day
+         [datetime(2007,1,1), datetime(2007,12,31)]] # reads one year
+    read_perc: float
+        percentage of datetimes out of date_list to read
+    **kwargs:
+        other keywords are passed to the get_avg_image method
+        dataset
+    """
+    date_read = random.sample(
+        date_list, int(math.ceil(len(date_list) * read_perc / 100.0)))
+    print "reading {} out of {} dates".format(len(date_read), len(date_list))
+    for d1, d2 in date_read:
+        data = dataset.get_avg_image(d1, d2, **kwargs)
 
 
 def read_rand_cells_by_cell_list(dataset, date_start, date_end, cell_id, read_perc=1.0):
