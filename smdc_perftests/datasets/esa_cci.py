@@ -60,32 +60,23 @@ class ESACCI(object):
         self.ds = nc.Dataset(fname)
         if variables is None:
             self.variables = self.ds.variables.keys()
+            # exclude time, lat and lon from variable list
+            self.variables.remove(self.time_var)
+            self.variables.remove(self.lat_var)
+            self.variables.remove(self.lon_var)
         else:
             self.variables = variables
 
         self.lat_var = lat_var
         self.lon_var = lon_var
         self.time_var = time_var
-        # exclude time, lat and lon from variable list
-        self.variables.remove(self.time_var)
-        self.variables.remove(self.lat_var)
-        self.variables.remove(self.lon_var)
         self._init_grid()
-        self._get_land_points()
 
     def _init_grid(self):
         """
         initialize the grid of the dataset
         """
-        longrid, latgrid = np.meshgrid(self.ds.variables['lon'][:],
-                                       self.ds.variables['lat'][:])
-        self.grid = grids.BasicGrid(longrid.flatten(), latgrid.flatten(),
-                                    shape=(1440, 720))
 
-    def _get_land_points(self):
-        """
-        get the land points from the land mask file
-        """
         lsmaskfile = os.path.join(os.path.dirname(__file__), "..", "..", "bin",
                                   "esa-cci",
                                   "ESACCI-SOILMOISTURE-LANDMASK_V0.4.nc")
@@ -96,6 +87,10 @@ class ESACCI(object):
             all_ind = np.arange(land.size)
             land_ind = all_ind[land.flat == True]
             self.land_ind = land_ind
+            longrid, latgrid = np.meshgrid(ls.variables['lon'][:],
+                                           ls.variables['lat'][::-1])
+            self.grid = grids.BasicGrid(longrid.flatten(), latgrid.flatten(),
+                                        subset=self.land_ind, shape=(1440, 720))
 
     def get_timeseries(self, locationid, date_start=None, date_end=None):
         """
