@@ -1,7 +1,7 @@
 
 .. code:: python
 
-    import smdc_perftests.performance_tests.test_runner as test_runner
+    import smdc_perftests.performance_tests.test_cases as test_cases
     import time
     import numpy as np
 
@@ -13,7 +13,7 @@
     # the returned results gets the name given in
     # the decorator but can be changed later if necessary
 
-    @test_runner.measure('experiment', runs=50)
+    @test_cases.measure('experiment', runs=50)
     def experiment(sleeptime=0.01):
         time.sleep(sleeptime+np.random.rand(1)*sleeptime)
 
