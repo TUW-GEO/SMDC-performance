@@ -45,7 +45,8 @@ def test_locationid2rowcol(cci_ds):
 
 def test_get_timeseries(cci_ds):
     ts = cci_ds.get_timeseries(797106)
-    pass
+    for var in ts:
+        assert len(ts[var]) == 2
 
 
 def test_land_points(cci_ds):
