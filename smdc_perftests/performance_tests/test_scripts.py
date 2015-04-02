@@ -67,7 +67,7 @@ def run_performance_tests(name, dataset, save_dir,
     """
 
     # test reading of time series by grid point/location id
-    test_name = '{}_test_rand_gpi'.format(name)
+    test_name = '{}_test-rand-gpi'.format(name)
 
     @test_cases.measure(test_name, runs=repeats)
     def test_rand_gpi():
@@ -78,7 +78,7 @@ def run_performance_tests(name, dataset, save_dir,
     results.to_nc(os.path.join(save_dir, test_name + ".nc"))
 
     # test reading of daily images, only start date is given
-    test_name = '{}_test_rand_daily_img'.format(name)
+    test_name = '{}_test-rand-daily-img'.format(name)
 
     # make date list containing just the start dates for reading images
     date_list = []
@@ -94,7 +94,7 @@ def run_performance_tests(name, dataset, save_dir,
     results.to_nc(os.path.join(save_dir, test_name + ".nc"))
 
     # test reading of averaged images
-    test_name = '{}_test_rand_avg_img'.format(name)
+    test_name = '{}_test-rand-avg-img'.format(name)
 
     @test_cases.measure(test_name, runs=repeats)
     def test_avg_img():
@@ -129,10 +129,10 @@ def run_esa_cci_netcdf_tests(test_dir, results_dir, variables=['sm']):
         # generate date list
 
         date_range_list = helper.generate_date_list(
-            datetime(1980, 1, 1), datetime(2013, 12, 31), n=1000)
+            datetime(1980, 1, 1), datetime(2013, 12, 31), n=10000)
 
         run_performance_tests(name, dataset, results_dir, gpi_list=dataset.land_ind,
-                              date_range_list=date_range_list)
+                              date_range_list=date_range_list, gpi_read_perc=0.1, repeats=1)
 
 if __name__ == '__main__':
     path = os.path.join(
