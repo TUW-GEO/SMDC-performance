@@ -181,7 +181,7 @@ class TestResults(object):
         """
         initializes object from netCDF4 file
         """
-        with netCDF4.Dataset("test.nc") as ncdata:
+        with netCDF4.Dataset(filename) as ncdata:
             self._measurements = ncdata.variables['measurements'][:].tolist()
             self.name = ncdata.dataset_name
 
