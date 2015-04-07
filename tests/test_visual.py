@@ -34,7 +34,7 @@ Created on Tue Nov 25 14:06:48 2014
 '''
 
 import smdc_perftests.visual as vis
-import smdc_perftests.performance_tests.test_runner as test_runner
+import smdc_perftests.performance_tests.test_cases as test_cases
 import matplotlib.pyplot as plt
 
 
@@ -44,9 +44,9 @@ def test_boxplots():
     list2 = [6.7, 8.3, 9.4, 7.3, 8.5]
     list3 = [6.7, 8.3, 9.4, 7.3]
 
-    res1 = test_runner.TestResults(list1, 'list1')
-    res2 = test_runner.TestResults(list2, 'list2')
-    res3 = test_runner.TestResults(list3, 'list3')
+    res1 = test_cases.TestResults(list1, 'list1')
+    res2 = test_cases.TestResults(list2, 'list2')
+    res3 = test_cases.TestResults(list3, 'list3')
 
     fig, axes = vis.plot_boxplots(
         res1, res2, res3, conf_level=50, figsize=(5, 3), dpi=150)
