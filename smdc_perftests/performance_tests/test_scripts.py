@@ -46,7 +46,7 @@ def run_performance_tests(name, dataset, save_dir,
         name of the test run, used for filenaming
     dataset: dataset instance
         instance implementing the get_timeseries,
-        get_avg_image and get_data methods. 
+        get_avg_image and get_data methods.
     save_dir: string
         directory to store the test results in
     gpi_list: list, optional
@@ -123,7 +123,7 @@ def run_esa_cci_netcdf_tests(test_dir, results_dir, variables=['sm']):
     filelist = glob.glob(os.path.join(test_dir, "*.nc"))
     for filen in filelist:
         print "testing file", filen
-        dataset = esa_cci.ESACCI(filen, variables=variables)
+        dataset = esa_cci.ESACCI_netcdf(filen, variables=variables)
         # get filename and use as name for test
         name = os.path.splitext(os.path.split(filen)[1])[0]
         # generate date list
@@ -131,7 +131,7 @@ def run_esa_cci_netcdf_tests(test_dir, results_dir, variables=['sm']):
         date_range_list = helper.generate_date_list(
             datetime(1980, 1, 1), datetime(2013, 12, 31), n=10000)
 
-        run_performance_tests(name, dataset, results_dir, gpi_list=dataset.land_ind,
+        run_performance_tests(name, dataset, results_dir, gpi_list=dataset.grid.land_ind,
                               date_range_list=date_range_list, gpi_read_perc=0.1, repeats=1)
 
 if __name__ == '__main__':
