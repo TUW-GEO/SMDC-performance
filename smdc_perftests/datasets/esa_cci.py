@@ -27,10 +27,39 @@ import os
 import pytesmo.grid.grids as grids
 
 
-class ESACCI(object):
+class ESACCI_grid(grids.BasicGrid):
 
     """
-    Class for reading ESA CCI data
+    ESA CCI grid class
+
+    Attributes
+    ----------
+    land_ind: numpy.ndarray
+        indices of the land points
+    """
+
+    def __init__(self, lsmaskfile=None):
+        if lsmaskfile is None:
+            lsmaskfile = os.path.join(os.path.dirname(__file__), "..", "..", "bin",
+                                      "esa-cci",
+                                      "ESACCI-SOILMOISTURE-LANDMASK_V0.4.nc")
+        with nc.Dataset(lsmaskfile) as ls:
+            # flip along the latitude axis to fit together with the images from the
+            # CCI data. This inconsitency was already reported to the CCI team.
+            land = ls.variables['land'][::-1, :].data == 1
+            all_ind = np.arange(land.size)
+            land_ind = all_ind[land.flat == True]
+            self.land_ind = land_ind
+            longrid, latgrid = np.meshgrid(ls.variables['lon'][:],
+                                           ls.variables['lat'][::-1])
+            super(ESACCI_grid, self).__init__(longrid.flatten(), latgrid.flatten(),
+                                              subset=self.land_ind, shape=(1440, 720))
+
+
+class ESACCI_netcdf(object):
+
+    """
+    Class for reading ESA CCI data from netCDF files
 
     Caches the following:
     - time variable
@@ -58,6 +87,10 @@ class ESACCI(object):
 
         self.fname = fname
         self.ds = nc.Dataset(fname)
+        self.lat_var = lat_var
+        self.lon_var = lon_var
+        self.time_var = time_var
+
         if variables is None:
             self.variables = self.ds.variables.keys()
             # exclude time, lat and lon from variable list
@@ -67,30 +100,13 @@ class ESACCI(object):
         else:
             self.variables = variables
 
-        self.lat_var = lat_var
-        self.lon_var = lon_var
-        self.time_var = time_var
         self._init_grid()
 
     def _init_grid(self):
         """
         initialize the grid of the dataset
         """
-
-        lsmaskfile = os.path.join(os.path.dirname(__file__), "..", "..", "bin",
-                                  "esa-cci",
-                                  "ESACCI-SOILMOISTURE-LANDMASK_V0.4.nc")
-        with nc.Dataset(lsmaskfile) as ls:
-            # flip along the latitude axis to fit together with the images from the
-            # CCI data. This inconsitency was already reported to the CCI team.
-            land = ls.variables['land'][::-1, :].data == 1
-            all_ind = np.arange(land.size)
-            land_ind = all_ind[land.flat == True]
-            self.land_ind = land_ind
-            longrid, latgrid = np.meshgrid(ls.variables['lon'][:],
-                                           ls.variables['lat'][::-1])
-            self.grid = grids.BasicGrid(longrid.flatten(), latgrid.flatten(),
-                                        subset=self.land_ind, shape=(1440, 720))
+        self.grid = ESACCI_grid()
 
     def get_timeseries(self, locationid, date_start=None, date_end=None):
         """

@@ -32,7 +32,7 @@ import smdc_perftests.datasets.esa_cci as esa_cci
 def cci_ds():
     fname = os.path.join(
         os.path.dirname(__file__), "test_data", "ESACCI-2Images.nc")
-    cci_reader = esa_cci.ESACCI(fname)
+    cci_reader = esa_cci.ESACCI_netcdf(fname)
     yield cci_reader
     cci_reader.ds.close()
 
@@ -50,7 +50,7 @@ def test_get_timeseries(cci_ds):
 
 
 def test_land_points(cci_ds):
-    assert cci_ds.land_ind.shape == (244243,)
+    assert cci_ds.grid.land_ind.shape == (244243,)
 
 
 def test_get_avg_image(cci_ds):
