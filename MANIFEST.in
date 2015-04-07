@@ -5,3 +5,5 @@ include *.md
 include tox.ini
 recursive-include smdc_perftests *.py *.c *.h *.pxd *.pyx
 recursive-include docs *.rst *.py
+recursive-include bin *.nc
+recursive-include tests *.py *.nc
