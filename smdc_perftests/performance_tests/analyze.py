@@ -25,11 +25,18 @@ import matplotlib.pyplot as plt
 
 import smdc_perftests.performance_tests.test_cases as test_cases
 
+try:
+    import seaborn as sns
+    seaborn_installed = True
+except ImportError:
+    seaborn_installed = False
+    pass
 
-def analyze_files(results_files, name_fm=None, grouping_f=None):
+
+def prep_results(results_files, name_fm=None, grouping_f=None):
     """
-    Takes a list of results file names and makes a few plots
-    contrasting the measured times
+    Takes a list of results file names and bundles the results into a
+    pandas DataFrame
 
     Parameters
     ----------
@@ -42,6 +49,11 @@ def analyze_files(results_files, name_fm=None, grouping_f=None):
     grouping_f: function ,optional
         can be used to assign groups according to the name of the
         results. Gets the name and returns a string.
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Results named and possibly grouped
     """
     if name_fm is None:
         name_fm = lambda x: x
@@ -62,9 +74,30 @@ def analyze_files(results_files, name_fm=None, grouping_f=None):
         d[group].append(res.mean)
 
     df = pd.DataFrame(d, index=names)
+    return df
+
+
+def bar_plot(df, show=True):
+    """
+    Make a bar plot from the gathered results
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+        Measured data
+    show: boolean
+        if set then the plot is shown
+
+    Returns
+    -------
+    ax: matplotlib.axes
+       axes of the plot
+    """
     ax = df.plot(kind='bar')
     ax.set_yscale('log')
-    plt.show()
+    if show:
+        plt.show()
+    return ax
 
 
 def esa_cci_name_formatter(n):
@@ -85,5 +118,6 @@ if __name__ == '__main__':
     path = os.path.join(
         "/media", "sf_D", "SMDC", "performance_tests", "CCI_testdata", "results")
     fs = glob.glob(os.path.join(path, "*.nc"))
-    analyze_files(fs, name_fm=esa_cci_name_formatter,
-                  grouping_f=esa_cci_grouping)
+    df = prep_results(fs, name_fm=esa_cci_name_formatter,
+                      grouping_f=esa_cci_grouping)
+    bar_plot(df)
