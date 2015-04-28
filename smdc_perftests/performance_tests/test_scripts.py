@@ -103,7 +103,7 @@ def run_performance_tests(name, dataset, save_dir,
         @test_cases.measure(test_name, runs=repeats)
         def test_rand_img():
             test_cases.read_rand_img_by_date_list(dataset, date_list,
-                                                read_perc=date_read_perc)
+                                                  read_perc=date_read_perc)
 
         results = test_rand_img()
         results.to_nc(os.path.join(save_dir, test_name + ".nc"))
@@ -114,7 +114,7 @@ def run_performance_tests(name, dataset, save_dir,
         @test_cases.measure(test_name, runs=repeats)
         def test_avg_img():
             test_cases.read_rand_img_by_date_range(dataset, date_range_list,
-                                                read_perc=date_read_perc)
+                                                   read_perc=date_read_perc)
 
         results = test_avg_img()
         results.to_nc(os.path.join(save_dir, test_name + ".nc"))
@@ -159,8 +159,45 @@ def run_esa_cci_netcdf_tests(test_dir, results_dir, variables=['sm']):
         date_range_list = helper.generate_date_list(
             datetime(1980, 1, 1), datetime(2013, 12, 31), n=10000)
 
-        run_performance_tests(name, dataset, results_dir, gpi_list=dataset.grid.land_ind,
-                              date_range_list=date_range_list, gpi_read_perc=0.1, repeats=1)
+        run_performance_tests(name, dataset, results_dir,
+                              gpi_list=dataset.grid.land_ind,
+                              date_range_list=date_range_list,
+                              gpi_read_perc=0.1, repeats=1)
+
+
+def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
+                      date_read_perc=0.1, gpi_read_perc=0.1,
+                      repeats=3):
+    """
+    Runs the ESA CCI tests given a dataset instance
+
+    Parameters
+    ----------
+    dataset: Dataset instance
+        Instance of a Dataset class
+    testname: string
+        Name of the test, used for storing the results
+    results_dir: string
+        path where to store the test restults
+    n_dates: int, optional
+        number of dates to generate
+    date_read_perc: float, optioanl
+        percentage of random selection from date_range_list read for each try
+    gpi_read_perc: float, optional
+        percentage of random selection from gpi_list read for each try
+    repeats: int, optional
+        number of repeats of the tests
+    """
+    date_range_list = helper.generate_date_list(datetime(1980, 1, 1),
+                                                datetime(2013, 12, 31), n=10000)
+    grid = esa_cci.ESACCI_grid()
+
+    run_performance_tests(testname, dataset, results_dir,
+                          gpi_list=grid.land_ind,
+                          date_range_list=date_range_list,
+                          date_read_perc=date_read_perc,
+                          gpi_read_perc=gpi_read_perc,
+                          repeats=repeats)
 
 if __name__ == '__main__':
     path = os.path.join(
