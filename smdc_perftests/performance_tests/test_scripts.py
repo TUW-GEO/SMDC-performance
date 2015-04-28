@@ -33,8 +33,12 @@ from smdc_perftests import helper
 def run_performance_tests(name, dataset, save_dir,
                           gpi_list=None,
                           date_range_list=None,
+                          cell_list=None,
+                          cell_date_start=None,
+                          cell_date_end=None,
                           gpi_read_perc=1.0,
                           date_read_perc=1.0,
+                          cell_read_perc=1.0,
                           repeats=5):
     """
     Run a complete test suite on a dataset and store the results
@@ -58,51 +62,75 @@ def run_performance_tests(name, dataset, save_dir,
         The format is a list of lists e.g.
         [[datetime(2007,1,1), datetime(2007,1,1)], #reads one day
          [datetime(2007,1,1), datetime(2007,12,31)]] # reads one year
+    cell_list: list, optional
+        list of possible cells to read from. if given then the read_data
+        test will be run
+    cell_date_start: datetime, optional
+        start date for the cell based reading
+    cell_date_end: datetime, optional
+        end date for the cell based reading
     gpi_read_perc: float, optional
         percentage of random selection from gpi_list read for each try
     date_read_perc: float, optioanl
-        percentag of random selection from date_range_list read for each try
+        percentage of random selection from date_range_list read for each try
+    cell_read_perc: float, optioanl
+        percentage of random selection from cell_range_list read for each try
     repeats: int, optional
         number of repeats for each measurement
     """
 
-    # test reading of time series by grid point/location id
-    test_name = '{}_test-rand-gpi'.format(name)
+    if gpi_list:
+        # test reading of time series by grid point/location id
+        test_name = '{}_test-rand-gpi'.format(name)
 
-    @test_cases.measure(test_name, runs=repeats)
-    def test_rand_gpi():
-        test_cases.read_rand_ts_by_gpi_list(dataset, gpi_list,
-                                            read_perc=gpi_read_perc)
+        @test_cases.measure(test_name, runs=repeats)
+        def test_rand_gpi():
+            test_cases.read_rand_ts_by_gpi_list(dataset, gpi_list,
+                                                read_perc=gpi_read_perc)
 
-    results = test_rand_gpi()
-    results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+        results = test_rand_gpi()
+        results.to_nc(os.path.join(save_dir, test_name + ".nc"))
 
-    # test reading of daily images, only start date is given
-    test_name = '{}_test-rand-daily-img'.format(name)
+    if date_range_list:
+        # test reading of daily images, only start date is given
+        test_name = '{}_test-rand-daily-img'.format(name)
 
-    # make date list containing just the start dates for reading images
-    date_list = []
-    for d1, d2 in date_range_list:
-        date_list.append(d1)
+        # make date list containing just the start dates for reading images
+        date_list = []
+        for d1, d2 in date_range_list:
+            date_list.append(d1)
 
-    @test_cases.measure(test_name, runs=repeats)
-    def test_rand_img():
-        test_cases.read_rand_img_by_date_list(dataset, date_list,
-                                              read_perc=date_read_perc)
+        @test_cases.measure(test_name, runs=repeats)
+        def test_rand_img():
+            test_cases.read_rand_img_by_date_list(dataset, date_list,
+                                                read_perc=date_read_perc)
 
-    results = test_rand_img()
-    results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+        results = test_rand_img()
+        results.to_nc(os.path.join(save_dir, test_name + ".nc"))
 
-    # test reading of averaged images
-    test_name = '{}_test-rand-avg-img'.format(name)
+        # test reading of averaged images
+        test_name = '{}_test-rand-avg-img'.format(name)
 
-    @test_cases.measure(test_name, runs=repeats)
-    def test_avg_img():
-        test_cases.read_rand_img_by_date_range(dataset, date_range_list,
-                                               read_perc=date_read_perc)
+        @test_cases.measure(test_name, runs=repeats)
+        def test_avg_img():
+            test_cases.read_rand_img_by_date_range(dataset, date_range_list,
+                                                read_perc=date_read_perc)
 
-    results = test_avg_img()
-    results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+        results = test_avg_img()
+        results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+
+    if cell_list:
+        # test reading of complete cells
+        test_name = '{}_test-rand-cells-data'.format(name)
+
+        @test_cases.measure(test_name, runs=repeats)
+        def test_read_cell_data():
+            test_cases.read_rand_cells_by_cell_list(dataset, cell_date_start,
+                                                    cell_date_end, cell_list,
+                                                    read_perc=cell_read_perc)
+
+        results = test_read_cell_data()
+        results.to_nc(os.path.join(save_dir, test_name + ".nc"))
 
 
 def run_esa_cci_netcdf_tests(test_dir, results_dir, variables=['sm']):
