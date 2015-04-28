@@ -43,5 +43,18 @@ def test_generate_date_list():
     for d1, d2 in dl:
         assert (d2 - d1).days <= 10
 
+def test_generate_date_same_random_seed():
+    """
+    Test if calling the function twice generates the same
+    datelist, important for consistent testing
+    """
+    minimum = datetime(2007, 01, 01)
+    maximum = datetime(2012, 01, 01)
+    # test for max_spread zero
+    dl = helper.generate_date_list(minimum, maximum, n=10, max_spread=0)
+    dl2 = helper.generate_date_list(minimum, maximum, n=10, max_spread=0)
+    assert dl == dl2
+
 if __name__ == '__main__':
     test_generate_date_list()
+    test_generate_date_same_random_seed()

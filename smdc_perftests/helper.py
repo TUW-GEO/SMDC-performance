@@ -46,6 +46,7 @@ def generate_date_list(minimum, maximum, n=500, max_spread=365):
         [[datetime(2007,1,1), datetime(2007,1,1)],
          [datetime(2007,1,1), datetime(2007,12,31)]]
     """
+    random.seed(3000)
     date_list = []
 
     for i in range(n):
