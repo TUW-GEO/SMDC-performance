@@ -1,6 +1,7 @@
 netCDF4
 pytest
 matplotlib
+pygeogrids
 
 # optional
 # seaborn for pretty plots

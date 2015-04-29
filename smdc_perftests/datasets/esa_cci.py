@@ -24,7 +24,7 @@ Created on Fri Mar 27 15:12:18 2015
 import netCDF4 as nc
 import numpy as np
 import os
-import pytesmo.grid.grids as grids
+import pygeogrids.grids as grids
 
 
 class ESACCI_grid(grids.BasicGrid):

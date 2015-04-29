@@ -330,7 +330,7 @@ def read_rand_ts_by_gpi_list(dataset, gpi_list, read_perc=1.0,
 
     start = time.time()
     for gpi in gpi_read:
-        data = dataset.get_timeseries(gpi, **kwargs)
+        data = dataset.get_timeseries(int(gpi), **kwargs)
         if max_runtime is not None:
             end = time.time()
             duration = end - start
