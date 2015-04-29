@@ -49,14 +49,15 @@ class FakeDataset(object):
     that do nothing
     """
 
-    def __init__(self):
+    def __init__(self, sleep_time=0.0001):
         pass
         self.ts_read = 0
+        self.sleep_time = sleep_time
         self.img_read = 0
         self.cells_read = 0
 
     def get_timeseries(self, gpi, date_start=None, date_end=None):
-        time.sleep(0.0001)
+        time.sleep(self.sleep_time)
         self.ts_read += 1
         return None
 
@@ -65,6 +66,7 @@ class FakeDataset(object):
         Image readers generally return more than one
         variable. This should not matter for these tests.
         """
+        time.sleep(self.sleep_time)
         assert type(date_start) == dt.datetime
         self.img_read += 1
         return None, None, None, None, None
@@ -74,6 +76,7 @@ class FakeDataset(object):
         Image readers generally return more than one
         variable. This should not matter for these tests.
         """
+        time.sleep(self.sleep_time)
         assert type(date_start) == dt.datetime
         assert type(date_end) == dt.datetime
         self.cells_read += 1
@@ -232,6 +235,26 @@ def test_run_rand_by_gpi_list_self_timing():
     assert len(std.measurements['get_timeseries']) == 300
 
 
+def test_run_rand_by_gpi_list_self_timing_max_runtime():
+    """
+    tests run by gpi list
+    """
+    fd = FakeDataset(sleep_time=0.01)
+    std = test_cases.SelfTimingDataset(fd)
+    # setup grid point index list, must come from grid object or
+    # sciDB
+    # this test dataset has 10000 gpis of which 20 percent will be read
+    gpi_list = range(10000)
+
+    @test_cases.measure('test_rand_gpi', runs=3)
+    def test():
+        test_cases.read_rand_ts_by_gpi_list(std, gpi_list, max_runtime=0.5)
+
+    results = test()
+    assert std.ts_read == (10000 * 0.01 * 3) / 2
+    assert len(std.measurements['get_timeseries']) == 150
+
+
 def test_run_rand_by_date_list_self_timing():
     """
     tests run by date list
@@ -257,6 +280,31 @@ def test_run_rand_by_date_list_self_timing():
     assert len(std.measurements['get_avg_image']) == math.ceil(365 * 0.01) * 3
 
 
+def test_run_rand_by_date_list_self_timing_max_runtime():
+    """
+    tests run by date list
+
+    Does no assertions at the moment, but shows how to use
+    the class
+    """
+    fd = FakeDataset(sleep_time=0.1)
+    std = test_cases.SelfTimingDataset(fd)
+    # setup grid point index list, must come from grid object or
+    # sciDB
+    # this test dataset has 1 year of dates of which 4 images will be read
+    date_list = []
+    for days in range(365):
+        date_list.append(dt.datetime(2007, 1, 1) + dt.timedelta(days=days))
+
+    @test_cases.measure('test_rand_date', runs=3)
+    def test():
+        test_cases.read_rand_img_by_date_list(std, date_list, max_runtime=0.3)
+
+    results = test()
+    assert std.img_read == 9
+    assert len(std.measurements['get_avg_image']) == 9
+
+
 def test_run_rand_by_cell_list_self_timing():
     """
     tests run by cell list
@@ -277,5 +325,25 @@ def test_run_rand_by_cell_list_self_timing():
     assert std.cells_read == 500 * 0.01 * 3
     assert len(std.measurements['get_data']) == std.cells_read
 
+
+def test_run_rand_by_cell_list_self_timing_max_runtime():
+    """
+    tests run by cell list using a SelfTimingDataset and restricting the
+    maximum runtime
+    """
+    fd = FakeDataset(sleep_time=0.1)
+    std = test_cases.SelfTimingDataset(fd)
+    cell_list = range(500)
+
+    @test_cases.measure('test_rand_cells', runs=3)
+    def test():
+        test_cases.read_rand_cells_by_cell_list(std, dt.datetime(2007, 1, 1),
+                                                dt.datetime(2008, 1, 1),
+                                                cell_list,
+                                                max_runtime=0.4)
+
+    results = test()
+    assert std.cells_read == 12
+    assert len(std.measurements['get_data']) == std.cells_read
 if __name__ == '__main__':
     test_self_timing_dataset()

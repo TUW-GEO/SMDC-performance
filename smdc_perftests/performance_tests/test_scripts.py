@@ -27,6 +27,7 @@ from datetime import datetime
 
 from smdc_perftests.performance_tests import test_cases
 from smdc_perftests.datasets import esa_cci
+from smdc_perftests.datasets import ascat
 from smdc_perftests import helper
 
 
@@ -39,6 +40,7 @@ def run_performance_tests(name, dataset, save_dir,
                           gpi_read_perc=1.0,
                           date_read_perc=1.0,
                           cell_read_perc=1.0,
+                          max_runtime_per_test=None,
                           repeats=1):
     """
     Run a complete test suite on a dataset and store the results
@@ -75,6 +77,9 @@ def run_performance_tests(name, dataset, save_dir,
         percentage of random selection from date_range_list read for each try
     cell_read_perc: float, optioanl
         percentage of random selection from cell_range_list read for each try
+    max_runtime_per_test: float, optional
+        maximum runtime per test in seconds, if given the tests will be aborted
+        after taking more than this time
     repeats: int, optional
         number of repeats for each measurement
     """
@@ -89,13 +94,16 @@ def run_performance_tests(name, dataset, save_dir,
         @test_cases.measure(test_name, runs=repeats)
         def test_rand_gpi():
             test_cases.read_rand_ts_by_gpi_list(timed_dataset, gpi_list,
-                                                read_perc=gpi_read_perc)
+                                                read_perc=gpi_read_perc,
+                                                max_runtime=max_runtime_per_test)
 
         results = test_rand_gpi()
         results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+
         detailed_results = test_cases.TestResults(
             timed_dataset.measurements['get_timeseries'],
             name=test_name + "_detailed")
+
         detailed_results.to_nc(
             os.path.join(save_dir, test_name + "_detailed.nc"))
 
@@ -111,13 +119,16 @@ def run_performance_tests(name, dataset, save_dir,
         @test_cases.measure(test_name, runs=repeats)
         def test_rand_img():
             test_cases.read_rand_img_by_date_list(timed_dataset, date_list,
-                                                  read_perc=date_read_perc)
+                                                  read_perc=date_read_perc,
+                                                  max_runtime=max_runtime_per_test)
 
         results = test_rand_img()
         results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+
         detailed_results = test_cases.TestResults(
             timed_dataset.measurements['get_avg_image'],
             name=test_name + "_detailed")
+
         detailed_results.to_nc(
             os.path.join(save_dir, test_name + "_detailed.nc"))
 
@@ -127,13 +138,16 @@ def run_performance_tests(name, dataset, save_dir,
         @test_cases.measure(test_name, runs=repeats)
         def test_avg_img():
             test_cases.read_rand_img_by_date_range(timed_avg_img_dataset, date_range_list,
-                                                   read_perc=date_read_perc)
+                                                   read_perc=date_read_perc,
+                                                   max_runtime=max_runtime_per_test)
 
         results = test_avg_img()
         results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+
         detailed_results = test_cases.TestResults(
             timed_avg_img_dataset.measurements['get_avg_image'],
             name=test_name + "_detailed")
+
         detailed_results.to_nc(
             os.path.join(save_dir, test_name + "_detailed.nc"))
 
@@ -145,13 +159,16 @@ def run_performance_tests(name, dataset, save_dir,
         def test_read_cell_data():
             test_cases.read_rand_cells_by_cell_list(timed_dataset, cell_date_start,
                                                     cell_date_end, cell_list,
-                                                    read_perc=cell_read_perc)
+                                                    read_perc=cell_read_perc,
+                                                    max_runtime=max_runtime_per_test)
 
         results = test_read_cell_data()
         results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+
         detailed_results = test_cases.TestResults(
             timed_dataset.measurements['get_data'],
             name=test_name + "_detailed")
+
         detailed_results.to_nc(
             os.path.join(save_dir, test_name + "_detailed.nc"))
 
@@ -190,7 +207,11 @@ def run_esa_cci_netcdf_tests(test_dir, results_dir, variables=['sm']):
 
 def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
                       date_read_perc=0.1, gpi_read_perc=0.1,
-                      repeats=3):
+                      repeats=3,
+                      cell_list=None,
+                      cell_date_start=None,
+                      cell_date_end=None,
+                      max_runtime_per_test=None):
     """
     Runs the ESA CCI tests given a dataset instance
 
@@ -210,9 +231,19 @@ def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
         percentage of random selection from gpi_list read for each try
     repeats: int, optional
         number of repeats of the tests
+    cell_list: list, optional
+        list of possible cells to read from. if given then the read_data
+        test will be run
+    cell_date_start: datetime, optional
+        start date for the cell based reading
+    cell_date_end: datetime, optional
+        end date for the cell based reading
+    max_runtime_per_test: float, optional
+        maximum runtime per test in seconds, if given the tests will be aborted
+        after taking more than this time
     """
     date_range_list = helper.generate_date_list(datetime(1980, 1, 1),
-                                                datetime(2013, 12, 31), n=10000)
+                                                datetime(2013, 12, 31), n=n_dates)
     grid = esa_cci.ESACCI_grid()
 
     run_performance_tests(testname, dataset, results_dir,
@@ -220,8 +251,61 @@ def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
                           date_range_list=date_range_list,
                           date_read_perc=date_read_perc,
                           gpi_read_perc=gpi_read_perc,
-                          repeats=repeats)
+                          repeats=repeats,
+                          cell_list=cell_list,
+                          cell_date_start=cell_date_start,
+                          cell_date_end=cell_date_end,
+                          max_runtime_per_test=max_runtime_per_test)
 
+
+def run_ascat_tests(dataset, testname, results_dir, n_dates=10000,
+                    date_read_perc=0.1, gpi_read_perc=0.1, repeats=3,
+                    cell_list=None, cell_date_start=None, cell_date_end=None,
+                    max_runtime_per_test=None):
+    """
+    Runs the ESA CCI tests given a dataset instance
+
+    Parameters
+    ----------
+    dataset: Dataset instance
+        Instance of a Dataset class
+    testname: string
+        Name of the test, used for storing the results
+    results_dir: string
+        path where to store the test restults
+    n_dates: int, optional
+        number of dates to generate
+    date_read_perc: float, optioanl
+        percentage of random selection from date_range_list read for each try
+    gpi_read_perc: float, optional
+        percentage of random selection from gpi_list read for each try
+    repeats: int, optional
+        number of repeats of the tests
+    cell_list: list, optional
+        list of possible cells to read from. if given then the read_data
+        test will be run
+    cell_date_start: datetime, optional
+        start date for the cell based reading
+    cell_date_end: datetime, optional
+        end date for the cell based reading
+    max_runtime_per_test: float, optional
+        maximum runtime per test in seconds, if given the tests will be aborted
+        after taking more than this time
+    """
+    date_range_list = helper.generate_date_list(datetime(2007, 1, 1),
+                                                datetime(2013, 12, 31), n=n_dates)
+    grid = ascat.ASCAT_grid()
+
+    run_performance_tests(testname, dataset, results_dir,
+                          gpi_list=grid.land_ind,
+                          date_range_list=date_range_list,
+                          date_read_perc=date_read_perc,
+                          gpi_read_perc=gpi_read_perc,
+                          repeats=repeats,
+                          cell_list=cell_list,
+                          cell_date_start=cell_date_start,
+                          cell_date_end=cell_date_end,
+                          max_runtime_per_test=max_runtime_per_test)
 if __name__ == '__main__':
     path = os.path.join(
         "/media", "sf_D", "SMDC", "performance_tests", "CCI_testdata")

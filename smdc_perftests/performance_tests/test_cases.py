@@ -303,7 +303,8 @@ def measure(exper_name, runs=5, ddof=1):
     return decorator
 
 
-def read_rand_ts_by_gpi_list(dataset, gpi_list, read_perc=1.0, **kwargs):
+def read_rand_ts_by_gpi_list(dataset, gpi_list, read_perc=1.0,
+                             max_runtime=None, **kwargs):
     """
     reads time series data for random grid point indices in a list
     additional kwargs are given to read_ts method of dataset
@@ -317,19 +318,28 @@ def read_rand_ts_by_gpi_list(dataset, gpi_list, read_perc=1.0, **kwargs):
         list or numpy array of grid point indices
     read_perc: float
         percentage of points from gpi_list to read
+    max_runtime: int, optional
+        maximum runtime of test in second.
     **kwargs:
         other keywords are passed to the get_timeseries method
         dataset
     """
     gpi_read = random.sample(
         gpi_list, int(math.ceil(len(gpi_list) * read_perc / 100.0)))
-
     print "reading {} out of {} time series".format(len(gpi_read), len(gpi_list))
+
+    start = time.time()
     for gpi in gpi_read:
         data = dataset.get_timeseries(gpi, **kwargs)
+        if max_runtime is not None:
+            end = time.time()
+            duration = end - start
+            if duration > max_runtime:
+                break
 
 
-def read_rand_img_by_date_list(dataset, date_list, read_perc=1.0, **kwargs):
+def read_rand_img_by_date_list(dataset, date_list, read_perc=1.0,
+                               max_runtime=None, **kwargs):
     """
     reads image data for random dates on a list
     additional kwargs are given to read_img method
@@ -344,6 +354,8 @@ def read_rand_img_by_date_list(dataset, date_list, read_perc=1.0, **kwargs):
         list of datetime objects
     read_perc: float
         percentage of datetimes out of date_list to read
+    max_runtime: int, optional
+        maximum runtime of test in second.
     **kwargs:
         other keywords are passed to the get_avg_image method
         dataset
@@ -351,11 +363,19 @@ def read_rand_img_by_date_list(dataset, date_list, read_perc=1.0, **kwargs):
     date_read = random.sample(
         date_list, int(math.ceil(len(date_list) * read_perc / 100.0)))
     print "reading {} out of {} dates".format(len(date_read), len(date_list))
+
+    start = time.time()
     for d in date_read:
         data = dataset.get_avg_image(d, **kwargs)
+        if max_runtime is not None:
+            end = time.time()
+            duration = end - start
+            if duration > max_runtime:
+                break
 
 
-def read_rand_img_by_date_range(dataset, date_list, read_perc=1.0, **kwargs):
+def read_rand_img_by_date_range(dataset, date_list, read_perc=1.0,
+                                max_runtime=None, **kwargs):
     """
     reads image data between random dates on a list
     additional kwargs are given to read_img method
@@ -373,6 +393,8 @@ def read_rand_img_by_date_range(dataset, date_list, read_perc=1.0, **kwargs):
          [datetime(2007,1,1), datetime(2007,12,31)]] # reads one year
     read_perc: float
         percentage of datetimes out of date_list to read
+    max_runtime: int, optional
+        maximum runtime of test in second.
     **kwargs:
         other keywords are passed to the get_avg_image method
         dataset
@@ -380,11 +402,19 @@ def read_rand_img_by_date_range(dataset, date_list, read_perc=1.0, **kwargs):
     date_read = random.sample(
         date_list, int(math.ceil(len(date_list) * read_perc / 100.0)))
     print "reading {} out of {} dates".format(len(date_read), len(date_list))
+
+    start = time.time()
     for d1, d2 in date_read:
         data = dataset.get_avg_image(d1, d2, **kwargs)
+        if max_runtime is not None:
+            end = time.time()
+            duration = end - start
+            if duration > max_runtime:
+                break
 
 
-def read_rand_cells_by_cell_list(dataset, date_start, date_end, cell_id, read_perc=1.0):
+def read_rand_cells_by_cell_list(dataset, date_start, date_end, cell_id,
+                                 read_perc=1.0, max_runtime=None):
     """
     reads data from the dataset using the get_data method.
     In this method the start and end datetimes are fixed for all
@@ -403,6 +433,8 @@ def read_rand_cells_by_cell_list(dataset, date_start, date_end, cell_id, read_pe
         cell ids which should be read. can also be a list of integers
     read_perc : float
         percentage of cell ids to read from the
+    max_runtime: int, optional
+        maximum runtime of test in second.
     """
     # make sure cell_id is iterable
     try:
@@ -412,5 +444,12 @@ def read_rand_cells_by_cell_list(dataset, date_start, date_end, cell_id, read_pe
 
     cell_read = random.sample(
         cell_id, int(math.ceil(len(cell_id) * read_perc / 100.0)))
+
+    start = time.time()
     for c in cell_read:
         data = dataset.get_data(date_start, date_end, c)
+        if max_runtime is not None:
+            end = time.time()
+            duration = end - start
+            if duration > max_runtime:
+                break
