@@ -25,7 +25,8 @@ import random
 from datetime import timedelta
 
 
-def generate_date_list(minimum, maximum, n=500, max_spread=365):
+def generate_date_list(minimum, maximum, n=500, max_spread=30,
+                       min_spread=None):
     """
     Parameters
     ----------
@@ -37,6 +38,8 @@ def generate_date_list(minimum, maximum, n=500, max_spread=365):
         number of dates to generate
     max_spread: int, optional
         maximum spread between dates
+    min_spread: int, optional
+        minimum spread between dates
 
     Returns
     -------
@@ -46,6 +49,8 @@ def generate_date_list(minimum, maximum, n=500, max_spread=365):
         [[datetime(2007,1,1), datetime(2007,1,1)],
          [datetime(2007,1,1), datetime(2007,12,31)]]
     """
+    if min_spread is None:
+        min_spread = max_spread
     random.seed(3000)
     date_list = []
 
@@ -54,7 +59,8 @@ def generate_date_list(minimum, maximum, n=500, max_spread=365):
         day_range = range(delta_days)
         day_start = random.choice(day_range)
         start_date = minimum + timedelta(days=day_start)
-        end_date = start_date + timedelta(days=random.randint(0, max_spread))
+        end_date = start_date + \
+            timedelta(days=random.randint(min_spread, max_spread))
         if end_date > maximum:
             end_date = maximum
         date_list.append([start_date, end_date])
