@@ -214,6 +214,56 @@ class TestResults(object):
             return False
 
 
+class SelfTimingDataset(object):
+
+    """
+    Dataset class that times the functions of
+    a dataset instance it gets in it's constructor
+
+    Stores the results as TestResults instances in a
+    dictionary with the timed function names as keys.
+    """
+
+    def __init__(self, ds, timefuncs=["get_timeseries",
+                                      "get_avg_image",
+                                      "get_data"]):
+        self.ds = ds
+        self.timefuncs = timefuncs
+        self.measurements = {}
+        # link attributes of this class to attributes of
+        # measuring class
+        for func in timefuncs:
+            self.gentimedfunc(func)
+            self.measurements[func] = []
+
+    def gentimedfunc(self, funcname):
+        """
+        generate a timed function that calls
+        the function of the given dataset
+        but returns the execution time
+
+        Parameters
+        ----------
+        funcname: string
+            function to create/call of the timed dataset
+        """
+
+        def f(*args, **kwargs):
+            start = time.time()
+            getattr(self.ds, funcname)(*args, **kwargs)
+            end = time.time()
+            duration = end - start
+            self.measurements[funcname].append(duration)
+
+        setattr(self, funcname, f)
+
+    def __getattr__(self, name):
+        try:
+            return self.__dict__[name]
+        except KeyError:
+            return getattr(self.ds, name)
+
+
 def measure(exper_name, runs=5, ddof=1):
     """
     Decorator that measures the running time of a function

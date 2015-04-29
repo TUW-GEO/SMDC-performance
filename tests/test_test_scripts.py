@@ -56,11 +56,19 @@ def test_script_running(tempdir):
     test_scripts.run_performance_tests(testname, ds, res_dir,
                                        gpi_list=ds.grid.land_ind,
                                        date_range_list=date_range_list,
+                                       cell_list=range(100),
+                                       cell_date_start=datetime(2013, 12, 1),
+                                       cell_date_end=datetime(2013, 12, 1),
                                        gpi_read_perc=0.1,
                                        repeats=1)
     fs = glob.glob(os.path.join(res_dir, "*.nc"))
-    assert len(fs) == 3
+    assert len(fs) == 8
     flist = ["./ESACCI-2Images_test-rand-avg-img.nc",
              "./ESACCI-2Images_test-rand-gpi.nc",
-             "./ESACCI-2Images_test-rand-daily-img.nc"]
+             "./ESACCI-2Images_test-rand-daily-img.nc",
+             "./ESACCI-2Images_test-rand-cells-data.nc",
+             "./ESACCI-2Images_test-rand-avg-img_detailed.nc",
+             "./ESACCI-2Images_test-rand-gpi_detailed.nc",
+             "./ESACCI-2Images_test-rand-cells-data_detailed.nc",
+             "./ESACCI-2Images_test-rand-daily-img_detailed.nc"]
     assert sorted(fs) == sorted(flist)

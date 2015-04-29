@@ -200,3 +200,82 @@ def test_to_netcdf(tempdir):
     res2 = test_cases.TestResults("test.nc")
     assert res1._measurements == res2._measurements
     assert res1.name == res2.name
+
+
+def test_self_timing_dataset():
+    fd = FakeDataset()
+    std = test_cases.SelfTimingDataset(fd)
+
+    std.get_timeseries(12)
+
+
+def test_run_rand_by_gpi_list_self_timing():
+    """
+    tests run by gpi list
+
+    Does no assertions at the moment, but shows how to use
+    the class
+    """
+    fd = FakeDataset()
+    std = test_cases.SelfTimingDataset(fd)
+    # setup grid point index list, must come from grid object or
+    # sciDB
+    # this test dataset has 10000 gpis of which 20 percent will be read
+    gpi_list = range(10000)
+
+    @test_cases.measure('test_rand_gpi', runs=3)
+    def test():
+        test_cases.read_rand_ts_by_gpi_list(std, gpi_list)
+
+    results = test()
+    assert std.ts_read == 10000 * 0.01 * 3
+    assert len(std.measurements['get_timeseries']) == 300
+
+
+def test_run_rand_by_date_list_self_timing():
+    """
+    tests run by date list
+
+    Does no assertions at the moment, but shows how to use
+    the class
+    """
+    fd = FakeDataset()
+    std = test_cases.SelfTimingDataset(fd)
+    # setup grid point index list, must come from grid object or
+    # sciDB
+    # this test dataset has 1 year of dates of which 20 percent will be read
+    date_list = []
+    for days in range(365):
+        date_list.append(dt.datetime(2007, 1, 1) + dt.timedelta(days=days))
+
+    @test_cases.measure('test_rand_date', runs=3)
+    def test():
+        test_cases.read_rand_img_by_date_list(std, date_list)
+
+    results = test()
+    assert std.img_read == math.ceil(365 * 0.01) * 3
+    assert len(std.measurements['get_avg_image']) == math.ceil(365 * 0.01) * 3
+
+
+def test_run_rand_by_cell_list_self_timing():
+    """
+    tests run by cell list
+
+    Does no assertions at the moment, but shows how to use
+    the class
+    """
+    fd = FakeDataset()
+    std = test_cases.SelfTimingDataset(fd)
+    cell_list = range(500)
+
+    @test_cases.measure('test_rand_cells', runs=3)
+    def test():
+        test_cases.read_rand_cells_by_cell_list(std,
+                                                dt.datetime(2007, 1, 1), dt.datetime(2008, 1, 1), cell_list)
+
+    results = test()
+    assert std.cells_read == 500 * 0.01 * 3
+    assert len(std.measurements['get_data']) == std.cells_read
+
+if __name__ == '__main__':
+    test_self_timing_dataset()

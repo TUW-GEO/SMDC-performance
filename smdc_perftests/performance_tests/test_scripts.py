@@ -39,7 +39,7 @@ def run_performance_tests(name, dataset, save_dir,
                           gpi_read_perc=1.0,
                           date_read_perc=1.0,
                           cell_read_perc=1.0,
-                          repeats=5):
+                          repeats=1):
     """
     Run a complete test suite on a dataset and store the results
     in the specified directory
@@ -79,19 +79,27 @@ def run_performance_tests(name, dataset, save_dir,
         number of repeats for each measurement
     """
 
-    if gpi_list:
+    timed_dataset = test_cases.SelfTimingDataset(dataset)
+    timed_avg_img_dataset = test_cases.SelfTimingDataset(dataset)
+
+    if gpi_list is not None:
         # test reading of time series by grid point/location id
         test_name = '{}_test-rand-gpi'.format(name)
 
         @test_cases.measure(test_name, runs=repeats)
         def test_rand_gpi():
-            test_cases.read_rand_ts_by_gpi_list(dataset, gpi_list,
+            test_cases.read_rand_ts_by_gpi_list(timed_dataset, gpi_list,
                                                 read_perc=gpi_read_perc)
 
         results = test_rand_gpi()
         results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+        detailed_results = test_cases.TestResults(
+            timed_dataset.measurements['get_timeseries'],
+            name=test_name + "_detailed")
+        detailed_results.to_nc(
+            os.path.join(save_dir, test_name + "_detailed.nc"))
 
-    if date_range_list:
+    if date_range_list is not None:
         # test reading of daily images, only start date is given
         test_name = '{}_test-rand-daily-img'.format(name)
 
@@ -102,35 +110,50 @@ def run_performance_tests(name, dataset, save_dir,
 
         @test_cases.measure(test_name, runs=repeats)
         def test_rand_img():
-            test_cases.read_rand_img_by_date_list(dataset, date_list,
+            test_cases.read_rand_img_by_date_list(timed_dataset, date_list,
                                                   read_perc=date_read_perc)
 
         results = test_rand_img()
         results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+        detailed_results = test_cases.TestResults(
+            timed_dataset.measurements['get_avg_image'],
+            name=test_name + "_detailed")
+        detailed_results.to_nc(
+            os.path.join(save_dir, test_name + "_detailed.nc"))
 
         # test reading of averaged images
         test_name = '{}_test-rand-avg-img'.format(name)
 
         @test_cases.measure(test_name, runs=repeats)
         def test_avg_img():
-            test_cases.read_rand_img_by_date_range(dataset, date_range_list,
+            test_cases.read_rand_img_by_date_range(timed_avg_img_dataset, date_range_list,
                                                    read_perc=date_read_perc)
 
         results = test_avg_img()
         results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+        detailed_results = test_cases.TestResults(
+            timed_avg_img_dataset.measurements['get_avg_image'],
+            name=test_name + "_detailed")
+        detailed_results.to_nc(
+            os.path.join(save_dir, test_name + "_detailed.nc"))
 
-    if cell_list:
+    if cell_list is not None:
         # test reading of complete cells
         test_name = '{}_test-rand-cells-data'.format(name)
 
         @test_cases.measure(test_name, runs=repeats)
         def test_read_cell_data():
-            test_cases.read_rand_cells_by_cell_list(dataset, cell_date_start,
+            test_cases.read_rand_cells_by_cell_list(timed_dataset, cell_date_start,
                                                     cell_date_end, cell_list,
                                                     read_perc=cell_read_perc)
 
         results = test_read_cell_data()
         results.to_nc(os.path.join(save_dir, test_name + ".nc"))
+        detailed_results = test_cases.TestResults(
+            timed_dataset.measurements['get_data'],
+            name=test_name + "_detailed")
+        detailed_results.to_nc(
+            os.path.join(save_dir, test_name + "_detailed.nc"))
 
 
 def run_esa_cci_netcdf_tests(test_dir, results_dir, variables=['sm']):
