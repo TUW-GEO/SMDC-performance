@@ -1,3 +1,8 @@
+# v0.4 - 2015-04-29
+
+- added possibility to time each function call of the dataset functions
+- added possibility to set maximum runtime of test execution
+
 # v0.3 - 2015-04-07
 
 - added classes for ESA CCI grid and netCDF reading
