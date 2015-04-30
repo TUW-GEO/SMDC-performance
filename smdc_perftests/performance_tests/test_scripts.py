@@ -208,9 +208,8 @@ def run_esa_cci_netcdf_tests(test_dir, results_dir, variables=['sm']):
 def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
                       date_read_perc=0.1, gpi_read_perc=0.1,
                       repeats=3,
-                      cell_list=None,
-                      cell_date_start=None,
-                      cell_date_end=None,
+                      cell_date_start=datetime(2012, 7, 1),
+                      cell_date_end=datetime(2012, 7, 30),
                       max_runtime_per_test=None):
     """
     Runs the ESA CCI tests given a dataset instance
@@ -252,7 +251,7 @@ def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
                           date_read_perc=date_read_perc,
                           gpi_read_perc=gpi_read_perc,
                           repeats=repeats,
-                          cell_list=cell_list,
+                          cell_list=[1],
                           cell_date_start=cell_date_start,
                           cell_date_end=cell_date_end,
                           max_runtime_per_test=max_runtime_per_test)
@@ -260,7 +259,8 @@ def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
 
 def run_ascat_tests(dataset, testname, results_dir, n_dates=10000,
                     date_read_perc=0.1, gpi_read_perc=0.1, repeats=3,
-                    cell_list=None, cell_date_start=None, cell_date_end=None,
+                    cell_read_perc=10.0, cell_date_start=datetime(2012, 7, 1),
+                    cell_date_end=datetime(2012, 7, 30),
                     max_runtime_per_test=None):
     """
     Runs the ESA CCI tests given a dataset instance
@@ -301,8 +301,9 @@ def run_ascat_tests(dataset, testname, results_dir, n_dates=10000,
                           date_range_list=date_range_list,
                           date_read_perc=date_read_perc,
                           gpi_read_perc=gpi_read_perc,
+                          cell_read_perc=cell_read_perc,
                           repeats=repeats,
-                          cell_list=cell_list,
+                          cell_list=grid.get_cells(),
                           cell_date_start=cell_date_start,
                           cell_date_end=cell_date_end,
                           max_runtime_per_test=max_runtime_per_test)
