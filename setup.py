@@ -38,7 +38,8 @@ JUNIT_XML = False
 CLASSIFIERS = ['Development Status :: 4 - Beta',
                'Programming Language :: Python']
 
-# Add here console scripts like ['hello_world = smdc_perftests.module:function']
+# Add here console scripts like ['hello_world =
+# smdc_perftests.module:function']
 CONSOLE_SCRIPTS = []
 
 # Versioneer configuration
@@ -197,6 +198,8 @@ def setup_package():
           classifiers=CLASSIFIERS,
           test_suite='tests',
           packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
+          package_data={'smdc_perftests': [os.path.join('bin', 'ascat', '*.nc'),
+                                           os.path.join('bin', 'esa-cci', '*.nc')]},
           install_requires=install_reqs,
           setup_requires=['six'],
           cmdclass=cmdclass,

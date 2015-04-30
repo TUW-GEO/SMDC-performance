@@ -40,7 +40,7 @@ class ASCAT_grid(grids.CellGrid):
 
     def __init__(self, lsmaskfile=None):
         if lsmaskfile is None:
-            lsmaskfile = os.path.join(os.path.dirname(__file__), "..", "..", "bin",
+            lsmaskfile = os.path.join(os.path.dirname(__file__), "..", "bin",
                                       "ascat",
                                       "TUW_WARP5_grid_info_2_1.nc")
         with nc.Dataset(lsmaskfile) as ls:

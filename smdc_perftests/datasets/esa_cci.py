@@ -40,7 +40,7 @@ class ESACCI_grid(grids.BasicGrid):
 
     def __init__(self, lsmaskfile=None):
         if lsmaskfile is None:
-            lsmaskfile = os.path.join(os.path.dirname(__file__), "..", "..", "bin",
+            lsmaskfile = os.path.join(os.path.dirname(__file__), "..", "bin",
                                       "esa-cci",
                                       "ESACCI-SOILMOISTURE-LANDMASK_V0.4.nc")
         with nc.Dataset(lsmaskfile) as ls:
