@@ -31,6 +31,7 @@ from smdc_perftests.datasets.esa_cci import ESACCI_netcdf
 from smdc_perftests import helper
 
 from .fixtures import tempdir
+from .test_test_cases import FakeDataset
 
 
 def test_script_running(tempdir):
@@ -72,3 +73,33 @@ def test_script_running(tempdir):
              "./ESACCI-2Images_test-rand-cells-data_detailed.nc",
              "./ESACCI-2Images_test-rand-daily-img_detailed.nc"]
     assert sorted(fs) == sorted(flist)
+
+
+def run_test_for_dataset(runfunc, testname):
+
+    ds = FakeDataset()
+    res_dir = os.path.join(".")
+    runfunc(ds, testname, res_dir)
+    fs = glob.glob(os.path.join(res_dir, "*.nc"))
+    assert len(fs) == 8
+    flist = ["./{}_test-rand-avg-img.nc".format(testname),
+             "./{}_test-rand-gpi.nc".format(testname),
+             "./{}_test-rand-daily-img.nc".format(testname),
+             "./{}_test-rand-cells-data.nc".format(testname),
+             "./{}_test-rand-avg-img_detailed.nc".format(testname),
+             "./{}_test-rand-gpi_detailed.nc".format(testname),
+             "./{}_test-rand-cells-data_detailed.nc".format(testname),
+             "./{}_test-rand-daily-img_detailed.nc".format(testname)]
+    assert sorted(fs) == sorted(flist)
+
+
+def test_ascat_test_runner(tempdir):
+    run_test_for_dataset(test_scripts.run_ascat_tests, 'ascat-test')
+
+
+def test_cci_test_runner(tempdir):
+    run_test_for_dataset(test_scripts.run_esa_cci_tests, 'cci-test')
+
+
+def test_equi7_test_runner(tempdir):
+    run_test_for_dataset(test_scripts.run_equi7_tests, 'equi7-test')

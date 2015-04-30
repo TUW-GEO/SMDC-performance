@@ -251,7 +251,7 @@ def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
                           date_read_perc=date_read_perc,
                           gpi_read_perc=gpi_read_perc,
                           repeats=repeats,
-                          cell_list=[1],
+                          cell_list=[0],
                           cell_date_start=cell_date_start,
                           cell_date_end=cell_date_end,
                           max_runtime_per_test=max_runtime_per_test)
@@ -263,7 +263,7 @@ def run_ascat_tests(dataset, testname, results_dir, n_dates=10000,
                     cell_date_end=datetime(2012, 7, 30),
                     max_runtime_per_test=None):
     """
-    Runs the ESA CCI tests given a dataset instance
+    Runs the ASCAT tests given a dataset instance
 
     Parameters
     ----------
@@ -307,6 +307,61 @@ def run_ascat_tests(dataset, testname, results_dir, n_dates=10000,
                           cell_date_start=cell_date_start,
                           cell_date_end=cell_date_end,
                           max_runtime_per_test=max_runtime_per_test)
+
+
+def run_equi7_tests(dataset, testname, results_dir, n_dates=10000,
+                    date_read_perc=0.1, gpi_read_perc=0.1, repeats=3,
+                    cell_read_perc=100.0, cell_date_start=datetime(2015, 1, 8),
+                    cell_date_end=datetime(2015, 2, 18),
+                    max_runtime_per_test=None):
+    """
+    Runs the ASAR/Sentinel 1 Equi7 tests given a dataset instance
+
+    Parameters
+    ----------
+    dataset: Dataset instance
+        Instance of a Dataset class
+    testname: string
+        Name of the test, used for storing the results
+    results_dir: string
+        path where to store the test restults
+    n_dates: int, optional
+        number of dates to generate
+    date_read_perc: float, optioanl
+        percentage of random selection from date_range_list read for each try
+    gpi_read_perc: float, optional
+        percentage of random selection from gpi_list read for each try
+    repeats: int, optional
+        number of repeats of the tests
+    cell_list: list, optional
+        list of possible cells to read from. if given then the read_data
+        test will be run
+    cell_date_start: datetime, optional
+        start date for the cell based reading
+    cell_date_end: datetime, optional
+        end date for the cell based reading
+    max_runtime_per_test: float, optional
+        maximum runtime per test in seconds, if given the tests will be aborted
+        after taking more than this time
+    """
+    date_range_list = helper.generate_date_list(datetime(2015, 1, 8),
+                                                datetime(2015, 2, 18), n=n_dates,
+                                                max_spread=5, min_spread=5)
+
+    gpi_list = range(2880000)
+    cell_list = range(2)
+    run_performance_tests(testname, dataset, results_dir,
+                          gpi_list=gpi_list,
+                          date_range_list=date_range_list,
+                          date_read_perc=date_read_perc,
+                          gpi_read_perc=gpi_read_perc,
+                          cell_read_perc=cell_read_perc,
+                          repeats=repeats,
+                          cell_list=cell_list,
+                          cell_date_start=cell_date_start,
+                          cell_date_end=cell_date_end,
+                          max_runtime_per_test=max_runtime_per_test)
+
 if __name__ == '__main__':
     path = os.path.join(
         "/media", "sf_D", "SMDC", "performance_tests", "CCI_testdata")
