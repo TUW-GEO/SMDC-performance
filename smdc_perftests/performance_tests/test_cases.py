@@ -445,6 +445,7 @@ def read_rand_cells_by_cell_list(dataset, date_start, date_end, cell_id,
     cell_read = random.sample(
         cell_id, int(math.ceil(len(cell_id) * read_perc / 100.0)))
 
+    print "reading {} out of {} cells".format(len(cell_read), len(cell_id))
     start = time.time()
     for c in cell_read:
         data = dataset.get_data(date_start, date_end, c)
