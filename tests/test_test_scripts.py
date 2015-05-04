@@ -58,8 +58,7 @@ def test_script_running(tempdir):
                                        gpi_list=ds.grid.land_ind,
                                        date_range_list=date_range_list,
                                        cell_list=range(100),
-                                       cell_date_start=datetime(2013, 12, 1),
-                                       cell_date_end=datetime(2013, 12, 1),
+                                       cell_date_list=date_range_list,
                                        gpi_read_perc=0.1,
                                        repeats=1)
     fs = glob.glob(os.path.join(res_dir, "*.nc"))

@@ -35,8 +35,7 @@ def run_performance_tests(name, dataset, save_dir,
                           gpi_list=None,
                           date_range_list=None,
                           cell_list=None,
-                          cell_date_start=None,
-                          cell_date_end=None,
+                          cell_date_list=None,
                           gpi_read_perc=1.0,
                           date_read_perc=1.0,
                           cell_read_perc=1.0,
@@ -67,10 +66,9 @@ def run_performance_tests(name, dataset, save_dir,
     cell_list: list, optional
         list of possible cells to read from. if given then the read_data
         test will be run
-    cell_date_start: datetime, optional
-        start date for the cell based reading
-    cell_date_end: datetime, optional
-        end date for the cell based reading
+    cell_date_list: list, optional
+        list of time intervals to read per cell. Should be as long as the
+        cell list or longer.
     gpi_read_perc: float, optional
         percentage of random selection from gpi_list read for each try
     date_read_perc: float, optioanl
@@ -151,14 +149,13 @@ def run_performance_tests(name, dataset, save_dir,
         detailed_results.to_nc(
             os.path.join(save_dir, test_name + "_detailed.nc"))
 
-    if cell_list is not None:
+    if cell_list is not None and cell_date_list is not None:
         # test reading of complete cells
         test_name = '{}_test-rand-cells-data'.format(name)
 
         @test_cases.measure(test_name, runs=repeats)
         def test_read_cell_data():
-            test_cases.read_rand_cells_by_cell_list(timed_dataset, cell_date_start,
-                                                    cell_date_end, cell_list,
+            test_cases.read_rand_cells_by_cell_list(timed_dataset, cell_date_list, cell_list,
                                                     read_perc=cell_read_perc,
                                                     max_runtime=max_runtime_per_test)
 
@@ -208,8 +205,6 @@ def run_esa_cci_netcdf_tests(test_dir, results_dir, variables=['sm']):
 def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
                       date_read_perc=0.1, gpi_read_perc=0.1,
                       repeats=3,
-                      cell_date_start=datetime(2012, 7, 1),
-                      cell_date_end=datetime(2012, 7, 30),
                       max_runtime_per_test=None):
     """
     Runs the ESA CCI tests given a dataset instance
@@ -233,16 +228,20 @@ def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
     cell_list: list, optional
         list of possible cells to read from. if given then the read_data
         test will be run
-    cell_date_start: datetime, optional
-        start date for the cell based reading
-    cell_date_end: datetime, optional
-        end date for the cell based reading
     max_runtime_per_test: float, optional
         maximum runtime per test in seconds, if given the tests will be aborted
         after taking more than this time
     """
-    date_range_list = helper.generate_date_list(datetime(1980, 1, 1),
-                                                datetime(2013, 12, 31), n=n_dates)
+
+    date_start = datetime(1980, 1, 1)
+    date_end = datetime(2013, 12, 31)
+
+    date_range_list = helper.generate_date_list(date_start, date_end, n=n_dates)
+
+    # 350 is the order of magnitude of months in the dataset timespan
+    cell_list=[0]*350
+    cell_date_list = helper.generate_date_list(date_start, date_end, n=len(cell_list))
+
     grid = esa_cci.ESACCI_grid()
 
     run_performance_tests(testname, dataset, results_dir,
@@ -251,16 +250,14 @@ def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
                           date_read_perc=date_read_perc,
                           gpi_read_perc=gpi_read_perc,
                           repeats=repeats,
-                          cell_list=[0],
-                          cell_date_start=cell_date_start,
-                          cell_date_end=cell_date_end,
+                          cell_list=cell_list,
+                          cell_date_list=cell_date_list,
                           max_runtime_per_test=max_runtime_per_test)
 
 
 def run_ascat_tests(dataset, testname, results_dir, n_dates=10000,
                     date_read_perc=0.1, gpi_read_perc=0.1, repeats=3,
-                    cell_read_perc=10.0, cell_date_start=datetime(2012, 7, 1),
-                    cell_date_end=datetime(2012, 7, 30),
+                    cell_read_perc=10.0,
                     max_runtime_per_test=None):
     """
     Runs the ASCAT tests given a dataset instance
@@ -284,17 +281,19 @@ def run_ascat_tests(dataset, testname, results_dir, n_dates=10000,
     cell_list: list, optional
         list of possible cells to read from. if given then the read_data
         test will be run
-    cell_date_start: datetime, optional
-        start date for the cell based reading
-    cell_date_end: datetime, optional
-        end date for the cell based reading
     max_runtime_per_test: float, optional
         maximum runtime per test in seconds, if given the tests will be aborted
         after taking more than this time
     """
-    date_range_list = helper.generate_date_list(datetime(2007, 1, 1),
-                                                datetime(2013, 12, 31), n=n_dates)
+
+    date_start = datetime(2007, 1, 1)
+    date_end = datetime(2013, 12, 31)
+
+    date_range_list = helper.generate_date_list(date_start, date_end, n=n_dates)
     grid = ascat.ASCAT_grid()
+
+    cell_list=grid.get_cells()
+    cell_date_list=helper.generate_date_list(date_start, date_end, n=len(cell_list))
 
     run_performance_tests(testname, dataset, results_dir,
                           gpi_list=grid.land_ind,
@@ -303,16 +302,14 @@ def run_ascat_tests(dataset, testname, results_dir, n_dates=10000,
                           gpi_read_perc=gpi_read_perc,
                           cell_read_perc=cell_read_perc,
                           repeats=repeats,
-                          cell_list=grid.get_cells(),
-                          cell_date_start=cell_date_start,
-                          cell_date_end=cell_date_end,
+                          cell_list=cell_list,
+                          cell_date_list=cell_date_list,
                           max_runtime_per_test=max_runtime_per_test)
 
 
 def run_equi7_tests(dataset, testname, results_dir, n_dates=10000,
                     date_read_perc=0.1, gpi_read_perc=0.1, repeats=3,
-                    cell_read_perc=100.0, cell_date_start=datetime(2015, 1, 8),
-                    cell_date_end=datetime(2015, 2, 18),
+                    cell_read_perc=100.0,
                     max_runtime_per_test=None):
     """
     Runs the ASAR/Sentinel 1 Equi7 tests given a dataset instance
@@ -336,20 +333,23 @@ def run_equi7_tests(dataset, testname, results_dir, n_dates=10000,
     cell_list: list, optional
         list of possible cells to read from. if given then the read_data
         test will be run
-    cell_date_start: datetime, optional
-        start date for the cell based reading
-    cell_date_end: datetime, optional
-        end date for the cell based reading
     max_runtime_per_test: float, optional
         maximum runtime per test in seconds, if given the tests will be aborted
         after taking more than this time
     """
-    date_range_list = helper.generate_date_list(datetime(2015, 1, 8),
-                                                datetime(2015, 2, 18), n=n_dates,
+
+    date_start = datetime(2015, 1, 8)
+    date_end = datetime(2015, 2, 18)
+
+    date_range_list = helper.generate_date_list(date_start, date_end, n=n_dates,
                                                 max_spread=5, min_spread=5)
 
     gpi_list = range(2880000)
-    cell_list = range(2)
+    cell_list = range(2) * 50
+
+    cell_date_list=helper.generate_date_list(date_start, date_end, n=len(cell_list),
+                                             max_spread=5, min_spread=5)
+
     run_performance_tests(testname, dataset, results_dir,
                           gpi_list=gpi_list,
                           date_range_list=date_range_list,
@@ -358,8 +358,7 @@ def run_equi7_tests(dataset, testname, results_dir, n_dates=10000,
                           cell_read_perc=cell_read_perc,
                           repeats=repeats,
                           cell_list=cell_list,
-                          cell_date_start=cell_date_start,
-                          cell_date_end=cell_date_end,
+                          cell_date_list=cell_date_list,
                           max_runtime_per_test=max_runtime_per_test)
 
 if __name__ == '__main__':

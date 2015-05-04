@@ -34,6 +34,7 @@ Created on Thu Nov 20 13:38:43 2014
 '''
 
 import smdc_perftests.performance_tests.test_cases as test_cases
+import smdc_perftests.helper as helper
 import datetime as dt
 import time
 import math
@@ -151,11 +152,14 @@ def test_run_rand_by_cell_list():
     """
     fd = FakeDataset()
     cell_list = range(500)
+    date_start = dt.datetime(2007, 1, 1)
+    date_end = dt.datetime(2008, 1, 1)
+    date_list = helper.generate_date_list(date_start, date_end, n=len(cell_list),
+                                          max_spread=5, min_spread=5)
 
     @test_cases.measure('test_rand_cells', runs=3)
     def test():
-        test_cases.read_rand_cells_by_cell_list(fd,
-                                                dt.datetime(2007, 1, 1), dt.datetime(2008, 1, 1), cell_list)
+        test_cases.read_rand_cells_by_cell_list(fd, date_list, cell_list)
 
     results = test()
     assert fd.cells_read == 500 * 0.01 * 3
@@ -315,11 +319,14 @@ def test_run_rand_by_cell_list_self_timing():
     fd = FakeDataset()
     std = test_cases.SelfTimingDataset(fd)
     cell_list = range(500)
+    date_start = dt.datetime(2007, 1, 1)
+    date_end = dt.datetime(2008, 1, 1)
+    date_list = helper.generate_date_list(date_start, date_end, n=len(cell_list),
+                                          max_spread=5, min_spread=5)
 
     @test_cases.measure('test_rand_cells', runs=3)
     def test():
-        test_cases.read_rand_cells_by_cell_list(std,
-                                                dt.datetime(2007, 1, 1), dt.datetime(2008, 1, 1), cell_list)
+        test_cases.read_rand_cells_by_cell_list(std, date_list, cell_list)
 
     results = test()
     assert std.cells_read == 500 * 0.01 * 3
@@ -334,12 +341,14 @@ def test_run_rand_by_cell_list_self_timing_max_runtime():
     fd = FakeDataset(sleep_time=0.1)
     std = test_cases.SelfTimingDataset(fd)
     cell_list = range(500)
+    date_start = dt.datetime(2007, 1, 1)
+    date_end = dt.datetime(2008, 1, 1)
+    date_list = helper.generate_date_list(date_start, date_end, n=len(cell_list),
+                                          max_spread=5, min_spread=5)
 
     @test_cases.measure('test_rand_cells', runs=3)
     def test():
-        test_cases.read_rand_cells_by_cell_list(std, dt.datetime(2007, 1, 1),
-                                                dt.datetime(2008, 1, 1),
-                                                cell_list,
+        test_cases.read_rand_cells_by_cell_list(std, date_list, cell_list,
                                                 max_runtime=0.4)
 
     results = test()

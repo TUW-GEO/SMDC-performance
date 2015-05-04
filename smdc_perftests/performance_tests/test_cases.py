@@ -413,7 +413,7 @@ def read_rand_img_by_date_range(dataset, date_list, read_perc=1.0,
                 break
 
 
-def read_rand_cells_by_cell_list(dataset, date_start, date_end, cell_id,
+def read_rand_cells_by_cell_list(dataset, cell_date_list, cell_id,
                                  read_perc=1.0, max_runtime=None):
     """
     reads data from the dataset using the get_data method.
@@ -429,6 +429,7 @@ def read_rand_cells_by_cell_list(dataset, date_start, date_end, cell_id,
         start dates which should be read.
     date_end: datetime
         end dates which should be read.
+    cell_date_list: list of tuples, time intervals to read for each cell
     cell_id: int or iterable
         cell ids which should be read. can also be a list of integers
     read_perc : float
@@ -445,10 +446,13 @@ def read_rand_cells_by_cell_list(dataset, date_start, date_end, cell_id,
     cell_read = random.sample(
         cell_id, int(math.ceil(len(cell_id) * read_perc / 100.0)))
 
+    dates_read = random.sample(
+        cell_date_list, int(math.ceil(len(cell_date_list) * read_perc / 100.0)))
+
     print "reading {} out of {} cells".format(len(cell_read), len(cell_id))
     start = time.time()
-    for c in cell_read:
-        data = dataset.get_data(date_start, date_end, c)
+    for c, dates in zip(cell_read, dates_read):
+        data = dataset.get_data(dates[0], dates[1], c)
         if max_runtime is not None:
             end = time.time()
             duration = end - start
