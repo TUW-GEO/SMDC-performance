@@ -204,7 +204,7 @@ def run_esa_cci_netcdf_tests(test_dir, results_dir, variables=['sm']):
 
 def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
                       date_read_perc=0.1, gpi_read_perc=0.1,
-                      repeats=3,
+                      repeats=3, cell_read_perc=10.0,
                       max_runtime_per_test=None):
     """
     Runs the ESA CCI tests given a dataset instance
@@ -238,21 +238,22 @@ def run_esa_cci_tests(dataset, testname, results_dir, n_dates=10000,
 
     date_range_list = helper.generate_date_list(date_start, date_end, n=n_dates)
 
-    # 350 is the order of magnitude of months in the dataset timespan
-    cell_list=[0]*350
+    # test 500 "cells" with 500 months
+    cell_list=[0]*500
     cell_date_list = helper.generate_date_list(date_start, date_end, n=len(cell_list))
 
     grid = esa_cci.ESACCI_grid()
 
-    run_performance_tests(testname, dataset, results_dir,
+    run_performance_tests(name=testname, dataset=dataset, save_dir=results_dir,
                           gpi_list=grid.land_ind,
                           date_range_list=date_range_list,
-                          date_read_perc=date_read_perc,
-                          gpi_read_perc=gpi_read_perc,
-                          repeats=repeats,
                           cell_list=cell_list,
                           cell_date_list=cell_date_list,
-                          max_runtime_per_test=max_runtime_per_test)
+                          gpi_read_perc=gpi_read_perc,
+                          date_read_perc=date_read_perc,
+                          cell_read_perc=cell_read_perc,
+                          max_runtime_per_test=max_runtime_per_test,
+                          repeats=repeats)
 
 
 def run_ascat_tests(dataset, testname, results_dir, n_dates=10000,
