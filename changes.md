@@ -1,3 +1,9 @@
+# v0.6 - 2015-06-01
+
+- refinement of test protocol by reading random 30 day periods from datasets
+- tests now time all reading activity
+
+
 # v0.5 - 2015-04-30
 
 - added equi7 test runner
