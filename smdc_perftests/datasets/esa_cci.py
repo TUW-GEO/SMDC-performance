@@ -67,7 +67,7 @@ class ESACCI_netcdf(object):
 
     """
 
-    def __init__(self, fname, variables=None, time_var='time', lat_var='lat', lon_var='lon'):
+    def __init__(self, fname, variables=None, avg_var=None, time_var='time', lat_var='lat', lon_var='lon'):
         """
         Parameters
         ----------
@@ -77,6 +77,9 @@ class ESACCI_netcdf(object):
             filename
         variables: list, optional
             if given only these variables will be read
+        avg_var: list, optional
+            list of variables for which to calculate the average if not given
+            it is calculated for all variables
         time_var: string, optional
             name of the time variable in the netCDF file
         lat_var: string, optional
@@ -90,6 +93,7 @@ class ESACCI_netcdf(object):
         self.lat_var = lat_var
         self.lon_var = lon_var
         self.time_var = time_var
+        self.avg_var = avg_var
 
         if variables is None:
             self.variables = self.ds.variables.keys()
@@ -159,7 +163,11 @@ class ESACCI_netcdf(object):
         img = self.get_data(date_start, date_end)
         # calculate average
         for v in img:
-            img[v] = img[v].mean(axis=0)
+            if self.avg_var is not None:
+                if v in self.avg_var:
+                    img[v] = img[v].mean(axis=0)
+            else:
+                img[v] = img[v].mean(axis=0)
         return img
 
     def get_data(self, date_start, date_end, cellID=1):
