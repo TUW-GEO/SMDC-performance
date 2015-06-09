@@ -13,6 +13,11 @@ import os
 import inspect
 from sphinx import apidoc
 
+import mock
+
+MOCK_MODULES = ['numpy', 'matplotlib', 'pygeogrids', 'netCDF4']
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
 
 __location__ = os.path.join(os.getcwd(), os.path.dirname(
     inspect.getfile(inspect.currentframe())))
@@ -53,7 +58,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'SMDC_perftests'
-copyright = u'2014, Christoph Paulik'
+copyright = u'2014, Vienna University of Technology'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
