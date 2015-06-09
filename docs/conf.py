@@ -16,7 +16,8 @@ from sphinx import apidoc
 import mock
 
 MOCK_MODULES = ['numpy', 'matplotlib', 'pyplot', 'matplotlib.pyplot',
-                'pygeogrids', 'grids', 'pygeogrids.grids', 'pandas', 'scipy.stats', 'netCDF4']
+                'pygeogrids', 'grids', 'pygeogrids.grids', 'pandas', 'scipy',
+                'stats','scipy.stats', 'netCDF4']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
