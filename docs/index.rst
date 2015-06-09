@@ -4,7 +4,7 @@ SMDC_perftests
 
 This is the documentation of **SMDC_perftests**, a small python module that provides
 a decorator for measuring the time a function needs to execute. It then stores the
-results in a :class:`SMDC_perftests.performance_tests.test_runner.TestResults` object.
+results in a :class:`SMDC_perftests.performance_tests.test_cases.TestResults` object.
 These objects can be compared to each other to quickly find out if the measured time
 was significantly different using a 95% confidence interval.
 
