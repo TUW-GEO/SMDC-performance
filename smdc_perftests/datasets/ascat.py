@@ -25,6 +25,7 @@ import netCDF4 as nc
 import numpy as np
 import os
 import pygeogrids.grids as grids
+from datetime import timedelta
 
 
 class ASCAT_grid(grids.CellGrid):
@@ -58,3 +59,160 @@ class ASCAT_grid(grids.CellGrid):
         super(ASCAT_grid, self).__init__(lon[valid_points], lat[valid_points],
                                          cells[valid_points],
                                          gpis=gpis[valid_points])
+
+
+class ASCAT_netcdf(object):
+
+    """
+    Class for reading ASCAT data from netCDF files
+
+    Caches the following:
+    - time variable
+    - keeps the dataset open as long as the instance exists
+
+    """
+
+    def __init__(self, fname, variables=None, avg_var=None, time_var='time',
+                 gpi_var='gpis_correct', cell_var='cells_correct'):
+        """
+        Parameters
+        ----------
+        self: type
+            description
+        fname: string
+            filename
+        variables: list, optional
+            if given only these variables will be read
+        avg_var: list, optional
+            list of variables for which to calculate the average if not given
+            it is calculated for all variables
+        time_var: string, optional
+            name of the time variable in the netCDF file
+        gpi_var: string, optional
+            name of the gpi variable in the netCDF file
+        cell_var: string, optional
+            name of the cell variable in the netCDF file
+        """
+
+        self.fname = fname
+        self.ds = nc.Dataset(fname)
+        self.gpi_var = gpi_var
+        self.cell_var = cell_var
+        self.time_var = time_var
+        self.avg_var = avg_var
+
+        if variables is None:
+            self.variables = self.ds.variables.keys()
+            # exclude time, lat and lon from variable list
+            self.variables.remove(self.time_var)
+            self.variables.remove(self.gpi_var)
+            self.variables.remove(self.cell_var)
+            # remove old variables that were added by mistake
+            self.variables.remove('cells')
+            self.variables.remove('gpis')
+        else:
+            self.variables = variables
+
+        self.gpis = self.ds.variables[self.gpi_var][:]
+        self.cells = self.ds.variables[self.cell_var][:]
+        self.times = self.ds.variables[self.time_var][:]
+        self._init_grid()
+
+    def _init_grid(self):
+        """
+        initialize the grid of the dataset
+        """
+        self.grid = ASCAT_grid()
+
+    def get_timeseries(self, locationid, date_start=None, date_end=None):
+        """
+        Parameters
+        ----------
+        locationid: int
+            location id as lat_index * row_length + lon_index
+        date_start: datetime, optional
+            start date of the time series
+        date_end: datetime, optional
+            end date of the time series
+
+        Returns
+        -------
+        ts : dict
+        """
+        start_index, end_index = None, None
+        if date_start is not None:
+            start_index = nc.netcdftime.date2index(date_start,
+                                                   self.ds.variables[self.time_var])
+        if date_end is not None:
+            end_index = nc.netcdftime.date2index(date_end,
+                                                 self.ds.variables[self.time_var])
+
+        date_slice = slice(start_index, end_index, None)
+        # get position in netCDF from location id
+        pos = np.where(self.gpis == locationid)[0][0]
+        ts = {}
+        for v in self.variables:
+            ts[v] = self.ds.variables[v][date_slice, pos]
+        return ts
+
+    def get_avg_image(self, date_start, date_end=None, cellID=None):
+        """
+        Reads image from dataset, takes the average if more than one value is in the result array.
+
+        Parameters
+        ----------
+        date_start: datetime
+            start date of the image to get. If only one date is given then
+            the whole day of this date is read
+        date_end: datetime, optional
+            end date of the averaged image to get
+        cellID: int, optional
+            cell id to which the image should be limited, for ESA CCI this is
+            not defined at the moment.
+        """
+        if date_end is None:
+            date_end = date_start + timedelta(days=1)
+        img = self.get_data(date_start, date_end, cellID=cellID)
+        # calculate average
+        for v in img:
+            if self.avg_var is not None:
+                if v in self.avg_var:
+                    img[v][img['ssf'] != 1] = np.nan
+                    img[v] = np.nanmean(img[v], axis=0)
+        return img
+
+    def get_data(self, date_start, date_end, cellID=None):
+        """
+        Reads date cube from dataset
+
+        Parameters
+        ----------
+        date_start: datetime
+            start date of the image to get. If only one date is given then
+            the whole day of this date is read
+        date_end: datetime
+            end date of the averaged image to get
+        cellID: int
+            cell id to which the image should be limited, for ESA CCI this is
+            not defined at the moment.
+        """
+        start_index = nc.netcdftime.date2index(date_start,
+                                               self.ds.variables[self.time_var])
+        end_index = nc.netcdftime.date2index(date_end,
+                                             self.ds.variables[self.time_var])
+        date_slice = slice(start_index, end_index + 1, None)
+
+        gpi_slice = slice(None, None, None)
+        if cellID is not None:
+            cell_pos = np.where(self.cells == cellID)[0]
+            gpi_slice = slice(cell_pos[0], cell_pos[-1] + 1, None)
+
+        img = {}
+        for v in self.variables:
+            if v in ['ssm', 'ssm_noise']:
+                img[v] = self.ds.variables[v][
+                    date_slice, gpi_slice].astype(np.float)
+            else:
+                img[v] = self.ds.variables[v][date_slice, gpi_slice]
+
+        return img
