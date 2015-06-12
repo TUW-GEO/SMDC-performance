@@ -23,6 +23,7 @@ Created on Fri Mar 27 15:12:18 2015
 
 import netCDF4 as nc
 import numpy as np
+import pandas as pd
 import os
 import pygeogrids.grids as grids
 from datetime import timedelta
@@ -73,7 +74,8 @@ class ASCAT_netcdf(object):
     """
 
     def __init__(self, fname, variables=None, avg_var=None, time_var='time',
-                 gpi_var='gpis_correct', cell_var='cells_correct'):
+                 gpi_var='gpis_correct', cell_var='cells_correct',
+                 get_exact_time=False):
         """
         Parameters
         ----------
@@ -92,6 +94,9 @@ class ASCAT_netcdf(object):
             name of the gpi variable in the netCDF file
         cell_var: string, optional
             name of the cell variable in the netCDF file
+        get_exact_time: boolean, optional
+            for time series deliver the exact time and not the one rounded to the
+            next hour.
         """
 
         self.fname = fname
@@ -100,6 +105,7 @@ class ASCAT_netcdf(object):
         self.cell_var = cell_var
         self.time_var = time_var
         self.avg_var = avg_var
+        self.get_exact_time = get_exact_time
 
         if variables is None:
             self.variables = self.ds.variables.keys()
@@ -109,13 +115,24 @@ class ASCAT_netcdf(object):
             self.variables.remove(self.cell_var)
             # remove old variables that were added by mistake
             self.variables.remove('cells')
+            self.variables.remove('orig_gpis')
+            self.variables.remove('row_size')
+            self.variables.remove('exact_time')
             self.variables.remove('gpis')
         else:
             self.variables = variables
+            # make sure ssf is always there for masking
+            if self.avg_var is not None:
+                if 'ssf' not in self.variables:
+                    self.variables.append('ssf')
 
         self.gpis = self.ds.variables[self.gpi_var][:]
+        self.orig_gpis = self.ds.variables['orig_gpis'][:]
+        self.row_size = self.ds.variables['row_size'][:]
+        self.exact_time = self.ds.variables['exact_time']
         self.cells = self.ds.variables[self.cell_var][:]
-        self.times = self.ds.variables[self.time_var][:]
+        self.times = nc.num2date(self.ds.variables[self.time_var][:],
+                                 units=self.ds.variables[self.time_var].units)
         self._init_grid()
 
     def _init_grid(self):
@@ -153,7 +170,21 @@ class ASCAT_netcdf(object):
         ts = {}
         for v in self.variables:
             ts[v] = self.ds.variables[v][date_slice, pos]
-        return ts
+
+        ds = pd.DataFrame(ts, index=self.times)
+        if self.get_exact_time:
+            # read exact time values for gpi and
+            ds = ds.dropna(how='all')
+            pos = np.where(self.orig_gpis == locationid)[0][0]
+            start_etime = np.sum(self.row_size[:pos])
+            end_etime = np.sum(self.row_size[:pos + 1])
+            exact_time = nc.num2date(self.exact_time[start_etime:end_etime],
+                                     self.exact_time.units)
+            et = pd.DataFrame({'date': exact_time}, index=exact_time)
+            et = et.resample("H", how='first')
+            ds = ds.join(et).dropna().set_index('date')
+
+        return ds
 
     def get_avg_image(self, date_start, date_end=None, cellID=None):
         """
